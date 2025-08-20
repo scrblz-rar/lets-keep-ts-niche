@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>scrblz hideout</title>
   <style>
-    /* ====== Base / Background ====== */
     :root{
       --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --glass:#ffffffcc; --border:#b5b5b5; --bar:#f0f0f0;
     }
@@ -29,7 +28,7 @@
       100%{ backdrop-filter: blur(2px); background-position: 100% 50%; }
     }
 
-    /* ====== App Window ====== */
+    /* Window Base */
     .window{
       position:relative; max-width:840px; width:min(92vw, 840px);
       background: var(--glass); border:1px solid var(--border); border-radius:6px;
@@ -39,7 +38,6 @@
     .titlebar{
       display:flex; align-items:center; gap:10px; padding:6px 10px;
       border-bottom:1px solid var(--border); background:var(--bar);
-      cursor:default;
     }
     .titlebar .icon{ width:14px; height:14px; border-radius:2px; background:#bbb; box-shadow: inset 0 0 0 1px #888; }
     .title{ font-weight:700; letter-spacing:.3px; }
@@ -58,7 +56,7 @@
     h2{ margin:14px 0 6px; text-align:center }
     .pathlabel{ color:#333; font-weight:700; margin:14px 0 8px }
     ul{ list-style:none; padding:0; margin:0 }
-    li{ margin:10px 0 }
+    li{ margin:8px 0 }
     a{ color:#0b5ec9; font-weight:700; text-decoration:none; cursor:pointer; }
     a:hover{ text-decoration:underline; text-shadow:0 0 6px rgba(11,94,201,.25) }
     .folder::before{ content:"\1F4C1  " }
@@ -66,14 +64,14 @@
 
     .status{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 14px; border-top:1px solid var(--border); background:#f7f7f7; font-size:12px }
 
-    /* ====== Game Popup Windows ====== */
+    /* Popup */
     .popup {
       position:fixed; top:100px; left:100px;
       width:800px; height:500px;
       background:var(--glass); border:1px solid var(--border); border-radius:6px;
       box-shadow:0 12px 28px rgba(0,0,0,.35);
       display:none; flex-direction:column; overflow:hidden;
-      z-index:999;
+      z-index:999; resize:both;
     }
     .popup .titlebar{ background:var(--bar); cursor:move; }
     .popup iframe{ flex:1; width:100%; border:0; background:#000; }
@@ -92,11 +90,19 @@
     </div>
 
     <div class="wrap">
-      <div class="pathbar"><span class="prompt">C:\\</span><span class="path">SCRBLZ_HIDEOUT\games\</span></div>
-      <h2>Scrblz Games</h2>
+      <div class="pathbar"><span class="prompt">C:\\</span><span class="path">SCRBLZ_HIDEOUT\></span></div>
+      <h2>Scrblz Hideout</h2>
+
+      <p class="pathlabel">📁 Games</p>
       <ul>
         <li class="file"><a onclick="openGame('deltarune.html','Deltarune')">deltarune.html</a></li>
         <li class="file"><a onclick="openGame('undertale.html','Undertale')">undertale.html</a></li>
+      </ul>
+
+      <p class="pathlabel">📁 Apps</p>
+      <ul>
+        <li class="file"><a onclick="openGame('notes.html','Notepad')">notes.html</a></li>
+        <li class="file"><a onclick="openGame('paint.html','Paint')">paint.html</a></li>
       </ul>
     </div>
 
@@ -106,12 +112,13 @@
     </div>
   </div>
 
-  <!-- Popup for Games -->
+  <!-- Popup -->
   <div id="popup" class="popup">
     <div class="titlebar" id="popupTitle">
-      <span id="popupName">Game Window</span>
+      <span id="popupName">Window</span>
       <span class="spacer"></span>
       <div class="winbtns">
+        <button class="winbtn" onclick="toggleFullscreen()">▢</button>
         <button class="winbtn close" onclick="closeGame()">✕</button>
       </div>
     </div>
@@ -123,6 +130,7 @@
     const frame = document.getElementById('gameFrame');
     const popupName = document.getElementById('popupName');
     let isDragging=false, offsetX, offsetY;
+    let isFull=false, prev = {};
 
     function openGame(file, title){
       frame.src = "https://scrblz-rar.github.io/webport/games/" + file;
@@ -132,11 +140,25 @@
     function closeGame(){
       popup.style.display = "none";
       frame.src = "";
+      isFull=false;
+    }
+    function toggleFullscreen(){
+      if(!isFull){
+        prev = {left:popup.style.left, top:popup.style.top, width:popup.style.width, height:popup.style.height};
+        popup.style.left = "0"; popup.style.top = "0";
+        popup.style.width = "100vw"; popup.style.height = "100vh";
+        isFull=true;
+      } else {
+        popup.style.left = prev.left||"100px"; popup.style.top = prev.top||"100px";
+        popup.style.width = prev.width||"800px"; popup.style.height = prev.height||"500px";
+        isFull=false;
+      }
     }
 
     // Dragging
     const bar = document.getElementById('popupTitle');
     bar.addEventListener('mousedown', e=>{
+      if(isFull) return;
       isDragging = true;
       offsetX = e.clientX - popup.offsetLeft;
       offsetY = e.clientY - popup.offsetTop;
