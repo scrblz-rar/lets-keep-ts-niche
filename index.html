@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scrblz Game Hub</title>
+  <title>Scrblz File Explorer</title>
   <style>
     body {
       margin:0; font-family:Consolas, monospace;
       display:flex; justify-content:center; align-items:center;
-      min-height:100vh; background:linear-gradient(180deg, white, #ccc);
+      min-height:100vh;
+      background:repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
     }
+    /* Explorer window */
     .window {
       background:#f0f0f0; border:2px solid #666;
       border-radius:6px; box-shadow:4px 4px 0 #333;
@@ -18,59 +20,99 @@
     .titlebar {
       background:#e0e0e0; padding:6px 10px;
       font-weight:bold; border-bottom:2px solid #666;
+      display:flex; justify-content:space-between; align-items:center;
     }
     .content { padding:18px; }
     ul { list-style:none; padding:0; margin:0; }
     li { margin:10px 0; }
     a { text-decoration:none; color:#0077cc; font-weight:bold; cursor:pointer; }
     a:hover { text-decoration:underline; }
-    /* popup overlay */
-    #popup {
-      position:fixed; top:0; left:0; right:0; bottom:0;
-      background:rgba(0,0,0,.7);
-      display:none; justify-content:center; align-items:center;
-      z-index:999;
+
+    /* Game popup (like Windows window) */
+    .popup {
+      position:fixed; top:80px; left:80px;
+      width:800px; height:500px;
+      background:#fff; border:2px solid #444;
+      border-radius:6px; box-shadow:6px 6px 20px rgba(0,0,0,.4);
+      display:none; flex-direction:column;
+      resize:both; overflow:hidden;
     }
-    #popup iframe {
-      width:90%; height:90%; border:0; background:#000;
+    .popup .titlebar {
+      background:#0078d7; color:white; border-bottom:1px solid #333;
+      cursor:move;
     }
-    #closeBtn {
-      position:absolute; top:20px; right:30px;
-      background:#e81123; color:#fff; border:0;
-      padding:8px 14px; font-weight:bold; cursor:pointer;
-      border-radius:4px;
+    .popup iframe {
+      flex:1; border:0; width:100%; height:100%;
+      background:#000;
     }
+    .popup .controls {
+      display:flex; gap:4px;
+    }
+    .btn {
+      border:none; padding:4px 10px; cursor:pointer;
+      font-weight:bold; border-radius:2px;
+    }
+    .btn.close { background:#e81123; color:white; }
+    .btn.full { background:#ddd; }
   </style>
 </head>
 <body>
+  <!-- Main File Explorer window -->
   <div class="window">
-    <div class="titlebar">🎮 Scrblz Game Hub</div>
+    <div class="titlebar">📂 File Explorer</div>
     <div class="content">
-      <p>Select a game:</p>
+      <p>C:\SCRBLZ\games\</p>
       <ul>
-        <li><a onclick="openGame('deltarune.html')">OMORI</a></li>
-        <li><a onclick="openGame('undertale.html')">Sort the Court</a></li>
-        <li><a onclick="openGame('Slope.html')">Slope</a></li>
+        <li><a onclick="openGame('deltarune.html','Deltarune')">📄 deltarune.html</a></li>
+        <li><a onclick="openGame('undertale.html','Undertale')">📄 undertale.html</a></li>
       </ul>
     </div>
   </div>
 
-  <!-- popup viewer -->
-  <div id="popup">
-    <button id="closeBtn" onclick="closeGame()">✕ Close</button>
+  <!-- Popup template -->
+  <div id="popup" class="popup">
+    <div class="titlebar" id="popupTitle">
+      <span id="popupName">Game Window</span>
+      <div class="controls">
+        <button class="btn full" onclick="fullscreenGame()">⛶</button>
+        <button class="btn close" onclick="closeGame()">✕</button>
+      </div>
+    </div>
     <iframe id="gameFrame"></iframe>
   </div>
 
   <script>
-    function openGame(file){
-      const frame = document.getElementById('gameFrame');
+    const popup = document.getElementById('popup');
+    const frame = document.getElementById('gameFrame');
+    const popupName = document.getElementById('popupName');
+
+    function openGame(file, title){
       frame.src = "https://scrblz-rar.github.io/webport/games/" + file;
-      document.getElementById('popup').style.display = "flex";
+      popupName.textContent = title;
+      popup.style.display = "flex";
     }
     function closeGame(){
-      document.getElementById('popup').style.display = "none";
-      document.getElementById('gameFrame').src = "";
+      popup.style.display = "none";
+      frame.src = "";
     }
+    function fullscreenGame(){
+      if (popup.requestFullscreen) popup.requestFullscreen();
+    }
+
+    // Dragging logic
+    let isDragging = false, offsetX, offsetY;
+    const titlebar = document.getElementById('popupTitle');
+    titlebar.addEventListener('mousedown', (e)=>{
+      isDragging = true;
+      offsetX = e.clientX - popup.offsetLeft;
+      offsetY = e.clientY - popup.offsetTop;
+    });
+    window.addEventListener('mousemove', (e)=>{
+      if(!isDragging) return;
+      popup.style.left = (e.clientX - offsetX) + "px";
+      popup.style.top = (e.clientY - offsetY) + "px";
+    });
+    window.addEventListener('mouseup', ()=> isDragging=false);
   </script>
 </body>
 </html>
