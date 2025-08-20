@@ -1,81 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scrblz File Explorer</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>scrblz hideout</title>
   <style>
-    body {
-      margin:0; font-family:Consolas, monospace;
-      display:flex; justify-content:center; align-items:center;
-      min-height:100vh;
-      background:repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
+    /* ====== Base / Background ====== */
+    :root{
+      --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --glass:#ffffffcc; --border:#b5b5b5; --bar:#f0f0f0;
     }
-    /* Explorer window */
-    .window {
-      background:#f0f0f0; border:2px solid #666;
-      border-radius:6px; box-shadow:4px 4px 0 #333;
-      width:600px; max-width:92vw; overflow:hidden;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Consolas, monaco, monospace; color:var(--ink);
+      display:grid; place-items:center; min-height:100vh; overflow:hidden;
+      background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
+      position:relative;
     }
-    .titlebar {
-      background:#e0e0e0; padding:6px 10px;
-      font-weight:bold; border-bottom:2px solid #666;
-      display:flex; justify-content:space-between; align-items:center;
+    body::before{
+      content:""; position:fixed; inset:0; pointer-events:none;
+      background: linear-gradient(120deg, rgba(255,255,255,.45), rgba(205,205,205,.45), rgba(235,235,235,.45));
+      mix-blend-mode: multiply; filter: saturate(1.05);
+      animation: shift 14s ease-in-out infinite alternate;
     }
-    .content { padding:18px; }
-    ul { list-style:none; padding:0; margin:0; }
-    li { margin:10px 0; }
-    a { text-decoration:none; color:#0077cc; font-weight:bold; cursor:pointer; }
-    a:hover { text-decoration:underline; }
+    @keyframes shift{
+      0%{ backdrop-filter: blur(0px); background-position: 0% 50%; }
+      50%{ backdrop-filter: blur(1px); background-position: 50% 50%; }
+      100%{ backdrop-filter: blur(2px); background-position: 100% 50%; }
+    }
 
-    /* Game popup (like Windows window) */
+    /* ====== App Window ====== */
+    .window{
+      position:relative; max-width:840px; width:min(92vw, 840px);
+      background: var(--glass); border:1px solid var(--border); border-radius:6px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.30);
+      overflow:hidden; display:flex; flex-direction:column;
+    }
+    .titlebar{
+      display:flex; align-items:center; gap:10px; padding:6px 10px;
+      border-bottom:1px solid var(--border); background:var(--bar);
+      cursor:default;
+    }
+    .titlebar .icon{ width:14px; height:14px; border-radius:2px; background:#bbb; box-shadow: inset 0 0 0 1px #888; }
+    .title{ font-weight:700; letter-spacing:.3px; }
+    .titlebar .spacer{ flex:1 }
+    .winbtns{ display:flex; margin-left:auto; border-left:1px solid #d9d9d9 }
+    .winbtn{ width:42px; height:30px; display:grid; place-items:center; background:transparent; border:0; border-left:1px solid #d9d9d9; cursor:pointer; }
+    .winbtn:hover{ background:#e8e8e8 }
+    .winbtn.close:hover{ background:#e81123; color:#fff }
+
+    .wrap{ padding:16px 18px 20px }
+
+    .pathbar{ display:flex; align-items:center; gap:10px; background:#fff; border:1px solid #a6a6a6; border-radius:4px; padding:8px 10px; box-shadow: inset 0 1px 2px #0001; }
+    .prompt{ color:#333; font-weight:700 }
+    .path{ flex:1; white-space:nowrap; overflow:hidden; }
+
+    h2{ margin:14px 0 6px; text-align:center }
+    .pathlabel{ color:#333; font-weight:700; margin:14px 0 8px }
+    ul{ list-style:none; padding:0; margin:0 }
+    li{ margin:10px 0 }
+    a{ color:#0b5ec9; font-weight:700; text-decoration:none; cursor:pointer; }
+    a:hover{ text-decoration:underline; text-shadow:0 0 6px rgba(11,94,201,.25) }
+    .folder::before{ content:"\1F4C1  " }
+    .file::before{ content:"\1F4C4  " }
+
+    .status{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 14px; border-top:1px solid var(--border); background:#f7f7f7; font-size:12px }
+
+    /* ====== Game Popup Windows ====== */
     .popup {
-      position:fixed; top:80px; left:80px;
+      position:fixed; top:100px; left:100px;
       width:800px; height:500px;
-      background:#fff; border:2px solid #444;
-      border-radius:6px; box-shadow:6px 6px 20px rgba(0,0,0,.4);
-      display:none; flex-direction:column;
-      resize:both; overflow:hidden;
+      background:var(--glass); border:1px solid var(--border); border-radius:6px;
+      box-shadow:0 12px 28px rgba(0,0,0,.35);
+      display:none; flex-direction:column; overflow:hidden;
+      z-index:999;
     }
-    .popup .titlebar {
-      background:#0078d7; color:white; border-bottom:1px solid #333;
-      cursor:move;
-    }
-    .popup iframe {
-      flex:1; border:0; width:100%; height:100%;
-      background:#000;
-    }
-    .popup .controls {
-      display:flex; gap:4px;
-    }
-    .btn {
-      border:none; padding:4px 10px; cursor:pointer;
-      font-weight:bold; border-radius:2px;
-    }
-    .btn.close { background:#e81123; color:white; }
-    .btn.full { background:#ddd; }
+    .popup .titlebar{ background:var(--bar); cursor:move; }
+    .popup iframe{ flex:1; width:100%; border:0; background:#000; }
   </style>
 </head>
 <body>
-  <!-- Main File Explorer window -->
+  <!-- File Explorer -->
   <div class="window">
-    <div class="titlebar">📂 File Explorer</div>
-    <div class="content">
-      <p>C:\SCRBLZ\games\</p>
+    <div class="titlebar">
+      <span class="icon"></span>
+      <span class="title">File Explorer</span>
+      <span class="spacer"></span>
+      <div class="winbtns">
+        <button class="winbtn close" onclick="document.querySelector('.window').style.display='none'">✕</button>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="pathbar"><span class="prompt">C:\\</span><span class="path">SCRBLZ_HIDEOUT\games\</span></div>
+      <h2>Scrblz Games</h2>
       <ul>
-        <li><a onclick="openGame('deltarune.html','Deltarune')">📄 deltarune.html</a></li>
-        <li><a onclick="openGame('undertale.html','Undertale')">📄 undertale.html</a></li>
+        <li class="file"><a onclick="openGame('deltarune.html','Deltarune')">deltarune.html</a></li>
+        <li class="file"><a onclick="openGame('undertale.html','Undertale')">undertale.html</a></li>
       </ul>
+    </div>
+
+    <div class="status">
+      <span>STATUS: idle</span>
+      <span>SCRBLZ:\\</span>
     </div>
   </div>
 
-  <!-- Popup template -->
+  <!-- Popup for Games -->
   <div id="popup" class="popup">
     <div class="titlebar" id="popupTitle">
       <span id="popupName">Game Window</span>
-      <div class="controls">
-        <button class="btn full" onclick="fullscreenGame()">⛶</button>
-        <button class="btn close" onclick="closeGame()">✕</button>
+      <span class="spacer"></span>
+      <div class="winbtns">
+        <button class="winbtn close" onclick="closeGame()">✕</button>
       </div>
     </div>
     <iframe id="gameFrame"></iframe>
@@ -85,6 +122,7 @@
     const popup = document.getElementById('popup');
     const frame = document.getElementById('gameFrame');
     const popupName = document.getElementById('popupName');
+    let isDragging=false, offsetX, offsetY;
 
     function openGame(file, title){
       frame.src = "https://scrblz-rar.github.io/webport/games/" + file;
@@ -95,19 +133,15 @@
       popup.style.display = "none";
       frame.src = "";
     }
-    function fullscreenGame(){
-      if (popup.requestFullscreen) popup.requestFullscreen();
-    }
 
-    // Dragging logic
-    let isDragging = false, offsetX, offsetY;
-    const titlebar = document.getElementById('popupTitle');
-    titlebar.addEventListener('mousedown', (e)=>{
+    // Dragging
+    const bar = document.getElementById('popupTitle');
+    bar.addEventListener('mousedown', e=>{
       isDragging = true;
       offsetX = e.clientX - popup.offsetLeft;
       offsetY = e.clientY - popup.offsetTop;
     });
-    window.addEventListener('mousemove', (e)=>{
+    window.addEventListener('mousemove', e=>{
       if(!isDragging) return;
       popup.style.left = (e.clientX - offsetX) + "px";
       popup.style.top = (e.clientY - offsetY) + "px";
