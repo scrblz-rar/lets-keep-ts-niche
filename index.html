@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scrblz Game Hub</title>
+  <style>
+    body {
+      margin:0;
+      font-family: Consolas, monospace;
+      display:flex; justify-content:center; align-items:center;
+      min-height:100vh;
+      background: linear-gradient(180deg, white, #ccc);
+    }
+    .window {
+      background:#f0f0f0;
+      border:2px solid #666;
+      border-radius:6px;
+      box-shadow:4px 4px 0 #333;
+      width:600px; max-width:92vw;
+      overflow:hidden;
+    }
+    .titlebar {
+      background:#e0e0e0;
+      padding:6px 10px;
+      font-weight:bold;
+      border-bottom:2px solid #666;
+    }
+    .content { padding:18px; }
+    ul { list-style:none; padding:0; margin:0; }
+    li { margin:10px 0; }
+    a {
+      text-decoration:none; color:#0077cc; font-weight:bold;
+    }
+    a:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <div class="window">
+    <div class="titlebar">🎮 Scrblz Game Hub</div>
+    <div class="content">
+      <p>Select a game:</p>
+      <ul>
+        <li><a href="games/OMORI.html" target="_blank">OMORI</a></li>
+        <li><a href="games/Sort the Court.html" target="_blank">Sort the Court</a></li>
+        <li><a href="games/Slope.html" target="_blank">Slope</a></li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
