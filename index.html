@@ -1,158 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Scrblz File Explorer</title>
-  <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Custom File Explorer</title>
   <style>
-    /* ===== Theme Colors ===== */
     :root {
-      --primary-color: #1e90ff; /* text + top bars */
-      --secondary-color: rgba(200, 200, 200, 0.4); /* semi-transparent explorer */
+      --primary-color: #ffffff; /* text + top bar */
+      --secondary-color: #2c2c2c; /* window panels background */
     }
 
     body {
       margin: 0;
-      font-family: Segoe UI, sans-serif;
-      background: linear-gradient(135deg, #ffffff, #cccccc);
+      font-family: Arial, sans-serif;
+      background: #1e1e1e; /* global background */
       color: var(--primary-color);
-      height: 100vh;
       display: flex;
       flex-direction: column;
+      height: 100vh;
     }
 
-    /* ===== Top Bar ===== */
+    /* Top bar */
     .top-bar {
       background: var(--primary-color);
-      color: white;
-      padding: 8px 12px;
+      color: #000; /* contrast */
+      padding: 10px;
+      text-align: center;
       font-weight: bold;
     }
 
-    /* ===== File Explorer ===== */
+    /* File explorer panels */
     .explorer {
-      flex: 1;
       display: flex;
-      background: var(--secondary-color);
-      backdrop-filter: blur(5px);
+      flex: 1;
     }
 
     .sidebar {
       width: 200px;
-      background: rgba(255, 255, 255, 0.1);
-      border-right: 1px solid #aaa;
+      background: var(--secondary-color);
       padding: 10px;
     }
 
-    .content {
-      flex: 1;
+    .main {
+      flex-grow: 1;
+      background: var(--secondary-color);
       padding: 10px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 12px;
+      overflow-y: auto;
     }
 
     .file {
-      background: rgba(255, 255, 255, 0.6);
-      border: 1px solid #aaa;
-      border-radius: 6px;
-      padding: 20px;
-      text-align: center;
+      padding: 5px;
       cursor: pointer;
-      transition: 0.2s;
+      color: var(--primary-color);
     }
 
     .file:hover {
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255,255,255,0.2);
     }
 
-    /* ===== Taskbar ===== */
-    .taskbar {
-      background: var(--primary-color);
-      color: white;
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
+    /* Bottom bar (taskbar style) */
+    .bottom-bar {
+      background: var(--secondary-color);
+      color: var(--primary-color);
       padding: 6px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       font-size: 14px;
-    }
-
-    /* ===== Ruffle Container ===== */
-    #game-container {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 80%;
-      height: 80%;
-      background: black;
-      display: none;
-      flex-direction: column;
-    }
-
-    #game-container ruffle-player {
-      flex: 1;
-      width: 100%;
-      height: 100%;
-    }
-
-    #close-btn {
-      background: red;
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <!-- Top Bar -->
-  <div class="top-bar">📁 Scrblz File Explorer</div>
+  <div class="top-bar">My File Explorer</div>
 
-  <!-- Explorer -->
   <div class="explorer">
     <div class="sidebar">
-      <p><b>Folders</b></p>
-      <p>Games</p>
-      <p>Apps</p>
+      <div class="file">Folder 1</div>
+      <div class="file">Folder 2</div>
+      <div class="file">Folder 3</div>
     </div>
-    <div class="content">
-      <div class="file" onclick="openGame('https://your-repo-link/ssf2.swf')">SSF2</div>
-      <div class="file" onclick="openGame('https://your-repo-link/othergame.swf')">Other Game</div>
+    <div class="main">
+      <div class="file">File A</div>
+      <div class="file">File B</div>
+      <div class="file">File C</div>
     </div>
   </div>
 
-  <!-- Taskbar -->
-  <div class="taskbar" id="taskbar-time"></div>
-
-  <!-- Game Container -->
-  <div id="game-container">
-    <button id="close-btn" onclick="closeGame()">X</button>
-    <ruffle-player id="player"></ruffle-player>
+  <!-- Bottom bar -->
+  <div class="bottom-bar">
+    <div>📂 File Explorer</div>
+    <div id="clock"></div>
   </div>
 
   <script>
-    function openGame(url) {
-      let player = document.getElementById("player");
-      player.load(url);
-      document.getElementById("game-container").style.display = "flex";
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      const date = now.toLocaleDateString();
+      document.getElementById('clock').textContent = `${date} ${time}`;
     }
-
-    function closeGame() {
-      document.getElementById("game-container").style.display = "none";
-      document.getElementById("player").innerHTML = ""; // reset
-    }
-
-    // Taskbar Time + Date
-    function updateTime() {
-      let now = new Date();
-      let time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      let date = now.toLocaleDateString();
-      document.getElementById("taskbar-time").textContent = date + " " + time;
-    }
-    setInterval(updateTime, 1000);
-    updateTime();
+    setInterval(updateClock, 1000);
+    updateClock();
   </script>
 </body>
 </html>
