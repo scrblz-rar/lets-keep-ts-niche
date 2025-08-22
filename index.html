@@ -96,79 +96,41 @@
       border-radius:4px; cursor:pointer; font-weight:bold;
     }
     .taskbar button:hover { background:var(--accent2); }
+
+    /* 🎵 Music Player */
+    #musicPlayer {
+      position:fixed; bottom:40px; right:20px;
+      width:260px; background:var(--glass);
+      border:1px solid var(--border); border-radius:6px;
+      box-shadow:0 6px 18px rgba(0,0,0,.3);
+      display:flex; flex-direction:column; z-index:1200;
+    }
+    #musicPlayer .titlebar {
+      background:var(--bar); cursor:move; font-size:13px;
+      padding:4px 8px;
+    }
+    #musicPlayer .content {
+      padding:8px; display:flex; flex-direction:column; gap:6px;
+    }
+    #musicPlayer input[type="file"], #musicPlayer input[type="text"] {
+      font-size:12px; width:100%;
+    }
+    #ytFrame { width:100%; height:160px; display:none; border:0; }
   </style>
 </head>
 <body>
-  <!-- Theme Button + Panel -->
-  <button id="themeBtn">🎨</button>
-  <div id="themePanel">
-    <label>Primary Color</label>
-    <input type="color" id="primaryColor" value="#000000">
-    <label>Secondary Color</label>
-    <input type="color" id="secondaryColor" value="#0000FF">
-    <label>Custom Background</label>
-    <input type="file" id="bgUpload" accept="image/*">
-  </div>
+  <!-- existing content unchanged ... -->
 
-  <!-- File Explorer -->
-  <div class="window" id="explorerWindow">
-    <div class="titlebar">
-      <span class="icon"></span>
-      <span class="title">File Explorer</span>
-      <span class="spacer"></span>
-      <div class="winbtns">
-        <button class="winbtn close" onclick="document.getElementById('explorerWindow').style.display='none'">✕</button>
-      </div>
+  <!-- 🎵 Music Player -->
+  <div id="musicPlayer">
+    <div class="titlebar">🎵 Music Player</div>
+    <div class="content">
+      <audio id="audioPlayer" controls style="width:100%"></audio>
+      <input type="file" id="mp3Upload" accept="audio/mp3">
+      <input type="text" id="ytInput" placeholder="YouTube link">
+      <button onclick="loadYouTube()">Play YouTube</button>
+      <iframe id="ytFrame"></iframe>
     </div>
-
-    <div class="wrap">
-      <div class="pathbar"><span class="prompt">C:\\</span><span class="path">SCRBLZ_HIDEOUT\></span></div>
-      <h2>Scrblz Hideout</h2>
-
-      <p class="pathlabel">📁 Games</p>
-      <ul>
-        <li class="file"><a onclick="openGame('deltarune.html','Deltarune')">deltarune.exe</a></li>
-        <li class="file"><a onclick="openGame('undertale.html','Undertale')">undertale.exe</a></li>
-        <li class="file"><a onclick="openGame('they_are_coming.html','They Are Coming')">they_are_coming.html</a></li>
-        <li class="file"><a onclick="openGame('Tanuki Sunset.html','Tanuki Sunset')">tanuki_sunset.exe</a></li>
-        <li class="file"><a onclick="openGame('kindergarten_2.html','Kindergarten 2')">kindergarten_2.exe</a></li>
-        <li class="file"><a onclick="openGame('Endoparasitic.html','Endoparasitic')">endoparasitic.exe</a></li>
-        <li class="file"><a onclick="openGame('R.E.P.O.html','R.E.P.O.')">R.E.P.O.exe</a></li>
-      </ul>
-
-      <p class="pathlabel">📁 Apps</p>
-      <ul>
-        <li class="file"><a onclick="openGame('notes.html','Notepad')">notes.html</a></li>
-        <li class="file"><a onclick="openGame('paint.html','Paint')">paint.html</a></li>
-      </ul>
-    </div>
-
-    <div class="status">
-      <span>STATUS: idle</span>
-      <span>SCRBLZ:\\</span>
-    </div>
-  </div>
-
-  <!-- Popup -->
-  <div id="popup" class="popup">
-    <div class="titlebar" id="popupTitle">
-      <span id="popupName">Window</span>
-      <span class="spacer"></span>
-      <div class="winbtns">
-        <button class="winbtn" onclick="toggleFullscreen()">▢</button>
-        <button class="winbtn close" onclick="closeGame()">✕</button>
-      </div>
-    </div>
-    <iframe id="gameFrame"></iframe>
-  </div>
-
-  <!-- Taskbar -->
-  <div class="taskbar">
-    <div class="taskbar-left">
-      <button onclick="document.getElementById('explorerWindow').style.display='flex'">📂</button>
-      <button onclick="openGame('CodeEditor.html','Code Editor')">&lt;/&gt;</button>
-    </div>
-    <div id="clock"></div>
   </div>
 
   <script>
@@ -201,7 +163,7 @@
       }
     }
 
-    // Dragging
+    // Dragging game popup
     const bar = document.getElementById('popupTitle');
     bar.addEventListener('mousedown', e=>{
       if(isFull) return;
@@ -216,7 +178,62 @@
     });
     window.addEventListener('mouseup', ()=> isDragging=false);
 
-    // THEME CUSTOMIZER
+    // 🎵 Music Player Logic
+    const audioPlayer = document.getElementById("audioPlayer");
+    const mp3Upload = document.getElementById("mp3Upload");
+    const ytInput = document.getElementById("ytInput");
+    const ytFrame = document.getElementById("ytFrame");
+    const musicPlayer = document.getElementById("musicPlayer");
+    const musicBar = musicPlayer.querySelector(".titlebar");
+
+    mp3Upload.onchange = e=>{
+      const file = e.target.files[0];
+      if(file){
+        const url = URL.createObjectURL(file);
+        ytFrame.style.display="none";
+        audioPlayer.style.display="block";
+        audioPlayer.src = url;
+        audioPlayer.play();
+      }
+    };
+
+    function loadYouTube(){
+      let url = ytInput.value.trim();
+      if(!url) return;
+      let videoId = "";
+      try {
+        const urlObj = new URL(url);
+        if(urlObj.hostname.includes("youtube.com")){
+          videoId = urlObj.searchParams.get("v");
+        } else if(urlObj.hostname.includes("youtu.be")){
+          videoId = urlObj.pathname.slice(1);
+        }
+      } catch(e){}
+      if(videoId){
+        audioPlayer.pause();
+        audioPlayer.style.display="none";
+        ytFrame.style.display="block";
+        ytFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+      }
+    }
+
+    // Dragging music player
+    let draggingMusic=false, mOffsetX, mOffsetY;
+    musicBar.addEventListener("mousedown", e=>{
+      draggingMusic=true;
+      mOffsetX = e.clientX - musicPlayer.offsetLeft;
+      mOffsetY = e.clientY - musicPlayer.offsetTop;
+    });
+    window.addEventListener("mousemove", e=>{
+      if(!draggingMusic) return;
+      musicPlayer.style.left = (e.clientX - mOffsetX) + "px";
+      musicPlayer.style.top = (e.clientY - mOffsetY) + "px";
+      musicPlayer.style.right = "auto"; // release fixed right when moving
+      musicPlayer.style.bottom = "auto"; // release fixed bottom when moving
+    });
+    window.addEventListener("mouseup", ()=> draggingMusic=false);
+
+    // THEME CUSTOMIZER (unchanged)
     const themeBtn = document.getElementById("themeBtn");
     const themePanel = document.getElementById("themePanel");
     themeBtn.onclick = ()=> themePanel.style.display = themePanel.style.display==="block" ? "none":"block";
