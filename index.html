@@ -6,7 +6,8 @@
   <title>scrblz hideout</title>
   <style>
     :root{
-      --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --glass:#ffffffcc; --border:#b5b5b5; --bar:#f0f0f0;
+      --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --accent2:#ff4081;
+      --glass:#ffffffcc; --border:#b5b5b5; --bar:#f0f0f0;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -14,19 +15,24 @@
       margin:0; font-family:Consolas, monaco, monospace; color:var(--ink);
       display:grid; place-items:center; min-height:100vh; overflow:hidden;
       background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
-      position:relative;
+      position:relative; transition: background 0.4s;
     }
-    body::before{
-      content:""; position:fixed; inset:0; pointer-events:none;
-      background: linear-gradient(120deg, rgba(255,255,255,.45), rgba(205,205,205,.45), rgba(235,235,235,.45));
-      mix-blend-mode: multiply; filter: saturate(1.05);
-      animation: shift 14s ease-in-out infinite alternate;
+    body.custom-bg { background-size:cover !important; background-position:center !important; }
+
+    /* Floating Theme Button */
+    #themeBtn {
+      position:fixed; top:12px; right:12px;
+      background:var(--accent); color:#fff; border:0; border-radius:4px;
+      padding:6px 10px; cursor:pointer; font-weight:bold;
+      box-shadow:0 2px 6px rgba(0,0,0,.3);
     }
-    @keyframes shift{
-      0%{ backdrop-filter: blur(0px); background-position: 0% 50%; }
-      50%{ backdrop-filter: blur(1px); background-position: 50% 50%; }
-      100%{ backdrop-filter: blur(2px); background-position: 100% 50%; }
+    #themePanel {
+      position:fixed; top:50px; right:12px; width:220px;
+      background:var(--glass); border:1px solid var(--border); border-radius:6px;
+      box-shadow:0 6px 18px rgba(0,0,0,.3); padding:12px; display:none;
     }
+    #themePanel label { font-size:13px; display:block; margin:6px 0 2px; }
+    #themePanel input[type="color"], #themePanel input[type="file"] { width:100%; }
 
     /* Window Base */
     .window{
@@ -39,16 +45,15 @@
       display:flex; align-items:center; gap:10px; padding:6px 10px;
       border-bottom:1px solid var(--border); background:var(--bar);
     }
-    .titlebar .icon{ width:14px; height:14px; border-radius:2px; background:#bbb; box-shadow: inset 0 0 0 1px #888; }
+    .titlebar .icon{ width:14px; height:14px; border-radius:2px; background:var(--accent); box-shadow: inset 0 0 0 1px #888; }
     .title{ font-weight:700; letter-spacing:.3px; }
     .titlebar .spacer{ flex:1 }
     .winbtns{ display:flex; margin-left:auto; border-left:1px solid #d9d9d9 }
     .winbtn{ width:42px; height:30px; display:grid; place-items:center; background:transparent; border:0; border-left:1px solid #d9d9d9; cursor:pointer; }
-    .winbtn:hover{ background:#e8e8e8 }
+    .winbtn:hover{ background:var(--accent); color:#fff }
     .winbtn.close:hover{ background:#e81123; color:#fff }
 
     .wrap{ padding:16px 18px 20px }
-
     .pathbar{ display:flex; align-items:center; gap:10px; background:#fff; border:1px solid #a6a6a6; border-radius:4px; padding:8px 10px; box-shadow: inset 0 1px 2px #0001; }
     .prompt{ color:#333; font-weight:700 }
     .path{ flex:1; white-space:nowrap; overflow:hidden; }
@@ -57,7 +62,7 @@
     .pathlabel{ color:#333; font-weight:700; margin:14px 0 8px }
     ul{ list-style:none; padding:0; margin:0 }
     li{ margin:8px 0 }
-    a{ color:#0b5ec9; font-weight:700; text-decoration:none; cursor:pointer; }
+    a{ color:var(--accent); font-weight:700; text-decoration:none; cursor:pointer; }
     a:hover{ text-decoration:underline; text-shadow:0 0 6px rgba(11,94,201,.25) }
     .folder::before{ content:"\1F4C1  " }
     .file::before{ content:"\1F4C4  " }
@@ -78,6 +83,17 @@
   </style>
 </head>
 <body>
+  <!-- Theme Button + Panel -->
+  <button id="themeBtn">🎨 Theme</button>
+  <div id="themePanel">
+    <label>Primary Color</label>
+    <input type="color" id="primaryColor" value="#0ea5e9">
+    <label>Secondary Color</label>
+    <input type="color" id="secondaryColor" value="#ff4081">
+    <label>Custom Background</label>
+    <input type="file" id="bgUpload" accept="image/*">
+  </div>
+
   <!-- File Explorer -->
   <div class="window">
     <div class="titlebar">
@@ -97,9 +113,9 @@
       <ul>
         <li class="file"><a onclick="openGame('deltarune.html','Deltarune')">deltarune.exe</a></li>
         <li class="file"><a onclick="openGame('undertale.html','Undertale')">undertale.exe</a></li>
-         <li class="file"><a onclick="openGame('they_are_coming.html','They Are Coming')">they_are_coming.html</a></li>
-         <li class="file"><a onclick="openGame('Tanuki Sunset.html','Tanuki Sunset')">tanuki_sunset.exe</a></li>
-         <li class="file"><a onclick="openGame('kindergarten_2.html','Kindergarten 2')">kindergarten_2.exe</a></li>
+        <li class="file"><a onclick="openGame('they_are_coming.html','They Are Coming')">they_are_coming.html</a></li>
+        <li class="file"><a onclick="openGame('Tanuki Sunset.html','Tanuki Sunset')">tanuki_sunset.exe</a></li>
+        <li class="file"><a onclick="openGame('kindergarten_2.html','Kindergarten 2')">kindergarten_2.exe</a></li>
         <li class="file"><a onclick="openGame('Endoparasitic.html','Endoparasitic')">endoparasitic.exe</a></li>
         <li class="file"><a onclick="openGame('R.E.P.O.html','R.E.P.O.')">R.E.P.O.exe</a></li>
       </ul>
@@ -174,6 +190,30 @@
       popup.style.top = (e.clientY - offsetY) + "px";
     });
     window.addEventListener('mouseup', ()=> isDragging=false);
+
+    // THEME CUSTOMIZER
+    const themeBtn = document.getElementById("themeBtn");
+    const themePanel = document.getElementById("themePanel");
+    themeBtn.onclick = ()=> themePanel.style.display = themePanel.style.display==="block" ? "none":"block";
+
+    document.getElementById("primaryColor").oninput = e=>{
+      document.documentElement.style.setProperty("--accent", e.target.value);
+    }
+    document.getElementById("secondaryColor").oninput = e=>{
+      document.documentElement.style.setProperty("--accent2", e.target.value);
+    }
+    document.getElementById("bgUpload").onchange = e=>{
+      const file = e.target.files[0];
+      if(file){
+        const reader = new FileReader();
+        reader.onload = evt=>{
+          document.body.classList.add("custom-bg");
+          document.body.style.background = `url(${evt.target.result}) no-repeat center center fixed`;
+          document.body.style.backgroundSize = "cover";
+        };
+        reader.readAsDataURL(file);
+      }
+    };
   </script>
 </body>
 </html>
