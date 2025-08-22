@@ -99,27 +99,116 @@
 
     /* 🎵 Music Player */
     #musicPlayer {
-      position:fixed; bottom:40px; right:20px;
-      width:260px; background:var(--glass);
-      border:1px solid var(--border); border-radius:6px;
+      position:fixed;
+      bottom:40px;
+      right:20px;
+      width:260px;
+      background:var(--glass);
+      border:1px solid var(--border);
+      border-radius:6px;
       box-shadow:0 6px 18px rgba(0,0,0,.3);
-      display:flex; flex-direction:column; z-index:1200;
+      display:flex;
+      flex-direction:column;
+      z-index:1200;
+      user-select:none;
     }
     #musicPlayer .titlebar {
-      background:var(--bar); cursor:move; font-size:13px;
+      background:var(--bar);
+      cursor:move;
+      font-size:13px;
       padding:4px 8px;
     }
     #musicPlayer .content {
-      padding:8px; display:flex; flex-direction:column; gap:6px;
+      padding:8px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
     }
-    #musicPlayer input[type="file"], #musicPlayer input[type="text"] {
-      font-size:12px; width:100%;
+    #musicPlayer input[type="file"],
+    #musicPlayer input[type="text"] {
+      font-size:12px;
+      width:100%;
     }
-    #ytFrame { width:100%; height:160px; display:none; border:0; }
+    #ytFrame {
+      width:100%;
+      height:160px;
+      display:none;
+      border:0;
+    }
   </style>
 </head>
 <body>
-  <!-- existing content unchanged ... -->
+  <!-- Theme Button + Panel -->
+  <button id="themeBtn">🎨</button>
+  <div id="themePanel">
+    <label>Primary Color</label>
+    <input type="color" id="primaryColor" value="#000000">
+    <label>Secondary Color</label>
+    <input type="color" id="secondaryColor" value="#0000FF">
+    <label>Custom Background</label>
+    <input type="file" id="bgUpload" accept="image/*">
+  </div>
+
+  <!-- File Explorer -->
+  <div class="window" id="explorerWindow">
+    <div class="titlebar">
+      <span class="icon"></span>
+      <span class="title">File Explorer</span>
+      <span class="spacer"></span>
+      <div class="winbtns">
+        <button class="winbtn close" onclick="document.getElementById('explorerWindow').style.display='none'">✕</button>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="pathbar"><span class="prompt">C:\\</span><span class="path">SCRBLZ_HIDEOUT\></span></div>
+      <h2>Scrblz Hideout</h2>
+
+      <p class="pathlabel">📁 Games</p>
+      <ul>
+        <li class="file"><a onclick="openGame('deltarune.html','Deltarune')">deltarune.exe</a></li>
+        <li class="file"><a onclick="openGame('undertale.html','Undertale')">undertale.exe</a></li>
+        <li class="file"><a onclick="openGame('they_are_coming.html','They Are Coming')">they_are_coming.html</a></li>
+        <li class="file"><a onclick="openGame('Tanuki Sunset.html','Tanuki Sunset')">tanuki_sunset.exe</a></li>
+        <li class="file"><a onclick="openGame('kindergarten_2.html','Kindergarten 2')">kindergarten_2.exe</a></li>
+        <li class="file"><a onclick="openGame('Endoparasitic.html','Endoparasitic')">endoparasitic.exe</a></li>
+        <li class="file"><a onclick="openGame('R.E.P.O.html','R.E.P.O.')">R.E.P.O.exe</a></li>
+      </ul>
+
+      <p class="pathlabel">📁 Apps</p>
+      <ul>
+        <li class="file"><a onclick="openGame('notes.html','Notepad')">notes.html</a></li>
+        <li class="file"><a onclick="openGame('paint.html','Paint')">paint.html</a></li>
+      </ul>
+    </div>
+
+    <div class="status">
+      <span>STATUS: idle</span>
+      <span>SCRBLZ:\\</span>
+    </div>
+  </div>
+
+  <!-- Popup -->
+  <div id="popup" class="popup">
+    <div class="titlebar" id="popupTitle">
+      <span id="popupName">Window</span>
+      <span class="spacer"></span>
+      <div class="winbtns">
+        <button class="winbtn" onclick="toggleFullscreen()">▢</button>
+        <button class="winbtn close" onclick="closeGame()">✕</button>
+      </div>
+    </div>
+    <iframe id="gameFrame"></iframe>
+  </div>
+
+  <!-- Taskbar -->
+  <div class="taskbar">
+    <div class="taskbar-left">
+      <button onclick="document.getElementById('explorerWindow').style.display='flex'">📂</button>
+      <button onclick="openGame('CodeEditor.html','Code Editor')">&lt;/&gt;</button>
+    </div>
+    <div id="clock"></div>
+  </div>
 
   <!-- 🎵 Music Player -->
   <div id="musicPlayer">
@@ -218,22 +307,26 @@
     }
 
     // Dragging music player
-    let draggingMusic=false, mOffsetX, mOffsetY;
+    let draggingMusic=false, mOffsetX=0, mOffsetY=0;
     musicBar.addEventListener("mousedown", e=>{
       draggingMusic=true;
       mOffsetX = e.clientX - musicPlayer.offsetLeft;
       mOffsetY = e.clientY - musicPlayer.offsetTop;
+      document.body.style.userSelect="none";
     });
     window.addEventListener("mousemove", e=>{
       if(!draggingMusic) return;
       musicPlayer.style.left = (e.clientX - mOffsetX) + "px";
       musicPlayer.style.top = (e.clientY - mOffsetY) + "px";
-      musicPlayer.style.right = "auto"; // release fixed right when moving
-      musicPlayer.style.bottom = "auto"; // release fixed bottom when moving
+      musicPlayer.style.right = "auto";
+      musicPlayer.style.bottom = "auto";
     });
-    window.addEventListener("mouseup", ()=> draggingMusic=false);
+    window.addEventListener("mouseup", ()=>{
+      draggingMusic=false;
+      document.body.style.userSelect="auto";
+    });
 
-    // THEME CUSTOMIZER (unchanged)
+    // THEME CUSTOMIZER
     const themeBtn = document.getElementById("themeBtn");
     const themePanel = document.getElementById("themePanel");
     themeBtn.onclick = ()=> themePanel.style.display = themePanel.style.display==="block" ? "none":"block";
