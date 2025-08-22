@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>scr_os</title>
+  <title>scrblz hideout</title>
   <style>
     :root{
       --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --accent2:#ff4081;
@@ -90,6 +90,7 @@
       display:flex; justify-content:space-between; align-items:center;
       padding:0 10px; font-size:13px; z-index:1000;
     }
+    .taskbar-left { display:flex; gap:6px; }
     .taskbar button {
       background:var(--accent); color:#fff; border:none; padding:4px 10px;
       border-radius:4px; cursor:pointer; font-weight:bold;
@@ -121,8 +122,8 @@
     </div>
 
     <div class="wrap">
-      <div class="pathbar"><span class="prompt">C:\\</span><span class="path">\></span></div>
-      <h2>scr_os</h2>
+      <div class="pathbar"><span class="prompt">C:\\</span><span class="path">SCRBLZ_HIDEOUT\></span></div>
+      <h2>Scrblz Hideout</h2>
 
       <p class="pathlabel">📁 Games</p>
       <ul>
@@ -144,7 +145,7 @@
 
     <div class="status">
       <span>STATUS: idle</span>
-      <span>SCR OS:\\</span>
+      <span>SCRBLZ:\\</span>
     </div>
   </div>
 
@@ -163,7 +164,10 @@
 
   <!-- Taskbar -->
   <div class="taskbar">
-    <button onclick="document.getElementById('explorerWindow').style.display='flex'">📂</button>
+    <div class="taskbar-left">
+      <button onclick="document.getElementById('explorerWindow').style.display='flex'">📂</button>
+      <button onclick="openGame('code_editor.html','Code Editor')">&lt;/&gt;</button>
+    </div>
     <div id="clock"></div>
   </div>
 
