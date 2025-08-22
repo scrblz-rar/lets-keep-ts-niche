@@ -1,219 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>scrblz hideout</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scrblz File Explorer</title>
+  <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
   <style>
-    :root{
-      --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --accent2:#ff4081;
-      --glass:#ffffffcc; --border:#b5b5b5; --bar:#f0f0f0;
+    /* ===== Theme Colors ===== */
+    :root {
+      --primary-color: #1e90ff; /* text + top bars */
+      --secondary-color: rgba(200, 200, 200, 0.4); /* semi-transparent explorer */
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:Consolas, monaco, monospace; color:var(--ink);
-      display:grid; place-items:center; min-height:100vh; overflow:hidden;
-      background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
-      position:relative; transition: background 0.4s;
-    }
-    body.custom-bg { background-size:cover !important; background-position:center !important; }
 
-    /* Floating Theme Button */
-    #themeBtn {
-      position:fixed; top:12px; right:12px;
-      background:var(--accent); color:#fff; border:0; border-radius:4px;
-      padding:6px 10px; cursor:pointer; font-weight:bold;
-      box-shadow:0 2px 6px rgba(0,0,0,.3);
+    body {
+      margin: 0;
+      font-family: Segoe UI, sans-serif;
+      background: linear-gradient(135deg, #ffffff, #cccccc);
+      color: var(--primary-color);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    #themePanel {
-      position:fixed; top:50px; right:12px; width:220px;
-      background:var(--glass); border:1px solid var(--border); border-radius:6px;
-      box-shadow:0 6px 18px rgba(0,0,0,.3); padding:12px; display:none;
+
+    /* ===== Top Bar ===== */
+    .top-bar {
+      background: var(--primary-color);
+      color: white;
+      padding: 8px 12px;
+      font-weight: bold;
     }
-    #themePanel label { font-size:13px; display:block; margin:6px 0 2px; }
-    #themePanel input[type="color"], #themePanel input[type="file"] { width:100%; }
 
-    /* Window Base */
-    .window{
-      position:relative; max-width:840px; width:min(92vw, 840px);
-      background: var(--glass); border:1px solid var(--border); border-radius:6px;
-      box-shadow: 0 16px 40px rgba(0,0,0,.30);
-      overflow:hidden; display:flex; flex-direction:column;
+    /* ===== File Explorer ===== */
+    .explorer {
+      flex: 1;
+      display: flex;
+      background: var(--secondary-color);
+      backdrop-filter: blur(5px);
     }
-    .titlebar{
-      display:flex; align-items:center; gap:10px; padding:6px 10px;
-      border-bottom:1px solid var(--border); background:var(--bar);
+
+    .sidebar {
+      width: 200px;
+      background: rgba(255, 255, 255, 0.1);
+      border-right: 1px solid #aaa;
+      padding: 10px;
     }
-    .titlebar .icon{ width:14px; height:14px; border-radius:2px; background:var(--accent); box-shadow: inset 0 0 0 1px #888; }
-    .title{ font-weight:700; letter-spacing:.3px; }
-    .titlebar .spacer{ flex:1 }
-    .winbtns{ display:flex; margin-left:auto; border-left:1px solid #d9d9d9 }
-    .winbtn{ width:42px; height:30px; display:grid; place-items:center; background:transparent; border:0; border-left:1px solid #d9d9d9; cursor:pointer; }
-    .winbtn:hover{ background:var(--accent); color:#fff }
-    .winbtn.close:hover{ background:#e81123; color:#fff }
 
-    .wrap{ padding:16px 18px 20px }
-    .pathbar{ display:flex; align-items:center; gap:10px; background:#fff; border:1px solid #a6a6a6; border-radius:4px; padding:8px 10px; box-shadow: inset 0 1px 2px #0001; }
-    .prompt{ color:#333; font-weight:700 }
-    .path{ flex:1; white-space:nowrap; overflow:hidden; }
-
-    h2{ margin:14px 0 6px; text-align:center }
-    .pathlabel{ color:#333; font-weight:700; margin:14px 0 8px }
-    ul{ list-style:none; padding:0; margin:0 }
-    li{ margin:8px 0 }
-    a{ color:var(--accent); font-weight:700; text-decoration:none; cursor:pointer; }
-    a:hover{ text-decoration:underline; text-shadow:0 0 6px rgba(11,94,201,.25) }
-    .folder::before{ content:"\1F4C1  " }
-    .file::before{ content:"\1F4C4  " }
-
-    .status{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 14px; border-top:1px solid var(--border); background:#f7f7f7; font-size:12px }
-
-    /* Popup */
-    .popup {
-      position:fixed; top:100px; left:100px;
-      width:800px; height:500px;
-      background:var(--glass); border:1px solid var(--border); border-radius:6px;
-      box-shadow:0 12px 28px rgba(0,0,0,.35);
-      display:none; flex-direction:column; overflow:hidden;
-      z-index:999; resize:both;
+    .content {
+      flex: 1;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
     }
-    .popup .titlebar{ background:var(--bar); cursor:move; }
-    .popup iframe{ flex:1; width:100%; border:0; background:#000; }
+
+    .file {
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .file:hover {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    /* ===== Taskbar ===== */
+    .taskbar {
+      background: var(--primary-color);
+      color: white;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 6px 12px;
+      font-size: 14px;
+    }
+
+    /* ===== Ruffle Container ===== */
+    #game-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      height: 80%;
+      background: black;
+      display: none;
+      flex-direction: column;
+    }
+
+    #game-container ruffle-player {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+    }
+
+    #close-btn {
+      background: red;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <!-- Theme Button + Panel -->
-  <button id="themeBtn">🎨 Theme</button>
-  <div id="themePanel">
-    <label>Primary Color</label>
-    <input type="color" id="primaryColor" value="#0ea5e9">
-    <label>Secondary Color</label>
-    <input type="color" id="secondaryColor" value="#ff4081">
-    <label>Custom Background</label>
-    <input type="file" id="bgUpload" accept="image/*">
-  </div>
+  <!-- Top Bar -->
+  <div class="top-bar">📁 Scrblz File Explorer</div>
 
-  <!-- File Explorer -->
-  <div class="window">
-    <div class="titlebar">
-      <span class="icon"></span>
-      <span class="title">File Explorer</span>
-      <span class="spacer"></span>
-      <div class="winbtns">
-        <button class="winbtn close" onclick="document.querySelector('.window').style.display='none'">✕</button>
-      </div>
+  <!-- Explorer -->
+  <div class="explorer">
+    <div class="sidebar">
+      <p><b>Folders</b></p>
+      <p>Games</p>
+      <p>Apps</p>
     </div>
-
-    <div class="wrap">
-      <div class="pathbar"><span class="prompt">C:\\</span><span class="path">SCRBLZ_HIDEOUT\></span></div>
-      <h2>Scrblz Hideout</h2>
-
-      <p class="pathlabel">📁 Games</p>
-      <ul>
-        <li class="file"><a onclick="openGame('deltarune.html','Deltarune')">deltarune.exe</a></li>
-        <li class="file"><a onclick="openGame('undertale.html','Undertale')">undertale.exe</a></li>
-        <li class="file"><a onclick="openGame('they_are_coming.html','They Are Coming')">they_are_coming.html</a></li>
-        <li class="file"><a onclick="openGame('Tanuki Sunset.html','Tanuki Sunset')">tanuki_sunset.exe</a></li>
-        <li class="file"><a onclick="openGame('kindergarten_2.html','Kindergarten 2')">kindergarten_2.exe</a></li>
-        <li class="file"><a onclick="openGame('Endoparasitic.html','Endoparasitic')">endoparasitic.exe</a></li>
-        <li class="file"><a onclick="openGame('R.E.P.O.html','R.E.P.O.')">R.E.P.O.exe</a></li>
-      </ul>
-
-      <p class="pathlabel">📁 Apps</p>
-      <ul>
-        <li class="file"><a onclick="openGame('notes.html','Notepad')">notes.html</a></li>
-        <li class="file"><a onclick="openGame('paint.html','Paint')">paint.html</a></li>
-      </ul>
-    </div>
-
-    <div class="status">
-      <span>STATUS: idle</span>
-      <span>SCRBLZ:\\</span>
+    <div class="content">
+      <div class="file" onclick="openGame('https://your-repo-link/ssf2.swf')">SSF2</div>
+      <div class="file" onclick="openGame('https://your-repo-link/othergame.swf')">Other Game</div>
     </div>
   </div>
 
-  <!-- Popup -->
-  <div id="popup" class="popup">
-    <div class="titlebar" id="popupTitle">
-      <span id="popupName">Window</span>
-      <span class="spacer"></span>
-      <div class="winbtns">
-        <button class="winbtn" onclick="toggleFullscreen()">▢</button>
-        <button class="winbtn close" onclick="closeGame()">✕</button>
-      </div>
-    </div>
-    <iframe id="gameFrame"></iframe>
+  <!-- Taskbar -->
+  <div class="taskbar" id="taskbar-time"></div>
+
+  <!-- Game Container -->
+  <div id="game-container">
+    <button id="close-btn" onclick="closeGame()">X</button>
+    <ruffle-player id="player"></ruffle-player>
   </div>
 
   <script>
-    const popup = document.getElementById('popup');
-    const frame = document.getElementById('gameFrame');
-    const popupName = document.getElementById('popupName');
-    let isDragging=false, offsetX, offsetY;
-    let isFull=false, prev = {};
-
-    function openGame(file, title){
-      frame.src = "https://scrblz-rar.github.io/webport/games/" + file;
-      popupName.textContent = title;
-      popup.style.display = "flex";
-    }
-    function closeGame(){
-      popup.style.display = "none";
-      frame.src = "";
-      isFull=false;
-    }
-    function toggleFullscreen(){
-      if(!isFull){
-        prev = {left:popup.style.left, top:popup.style.top, width:popup.style.width, height:popup.style.height};
-        popup.style.left = "0"; popup.style.top = "0";
-        popup.style.width = "100vw"; popup.style.height = "100vh";
-        isFull=true;
-      } else {
-        popup.style.left = prev.left||"100px"; popup.style.top = prev.top||"100px";
-        popup.style.width = prev.width||"800px"; popup.style.height = prev.height||"500px";
-        isFull=false;
-      }
+    function openGame(url) {
+      let player = document.getElementById("player");
+      player.load(url);
+      document.getElementById("game-container").style.display = "flex";
     }
 
-    // Dragging
-    const bar = document.getElementById('popupTitle');
-    bar.addEventListener('mousedown', e=>{
-      if(isFull) return;
-      isDragging = true;
-      offsetX = e.clientX - popup.offsetLeft;
-      offsetY = e.clientY - popup.offsetTop;
-    });
-    window.addEventListener('mousemove', e=>{
-      if(!isDragging) return;
-      popup.style.left = (e.clientX - offsetX) + "px";
-      popup.style.top = (e.clientY - offsetY) + "px";
-    });
-    window.addEventListener('mouseup', ()=> isDragging=false);
-
-    // THEME CUSTOMIZER
-    const themeBtn = document.getElementById("themeBtn");
-    const themePanel = document.getElementById("themePanel");
-    themeBtn.onclick = ()=> themePanel.style.display = themePanel.style.display==="block" ? "none":"block";
-
-    document.getElementById("primaryColor").oninput = e=>{
-      document.documentElement.style.setProperty("--accent", e.target.value);
+    function closeGame() {
+      document.getElementById("game-container").style.display = "none";
+      document.getElementById("player").innerHTML = ""; // reset
     }
-    document.getElementById("secondaryColor").oninput = e=>{
-      document.documentElement.style.setProperty("--accent2", e.target.value);
+
+    // Taskbar Time + Date
+    function updateTime() {
+      let now = new Date();
+      let time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      let date = now.toLocaleDateString();
+      document.getElementById("taskbar-time").textContent = date + " " + time;
     }
-    document.getElementById("bgUpload").onchange = e=>{
-      const file = e.target.files[0];
-      if(file){
-        const reader = new FileReader();
-        reader.onload = evt=>{
-          document.body.classList.add("custom-bg");
-          document.body.style.background = `url(${evt.target.result}) no-repeat center center fixed`;
-          document.body.style.backgroundSize = "cover";
-        };
-        reader.readAsDataURL(file);
-      }
-    };
+    setInterval(updateTime, 1000);
+    updateTime();
   </script>
 </body>
 </html>
