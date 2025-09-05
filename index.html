@@ -45,6 +45,7 @@
     .titlebar{
       display:flex; align-items:center; gap:10px; padding:6px 10px;
       border-bottom:1px solid var(--border); background:var(--bar);
+      cursor:move;
     }
     .titlebar .icon{ width:14px; height:14px; border-radius:2px; background:var(--accent); box-shadow: inset 0 0 0 1px #888; }
     .title{ font-weight:700; letter-spacing:.3px; }
@@ -70,16 +71,15 @@
 
     .status{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 14px; border-top:1px solid var(--border); background:#f7f7f7; font-size:12px }
 
-    /* Popup */
+    /* Popup Game Window */
     .popup {
       position:fixed; top:100px; left:100px;
       width:800px; height:500px;
       background:var(--glass); border:1px solid var(--border); border-radius:6px;
       box-shadow:0 12px 28px rgba(0,0,0,.35);
-      display:none; flex-direction:column; overflow:hidden;
+      display:flex; flex-direction:column; overflow:hidden;
       z-index:999; resize:both;
     }
-    .popup .titlebar{ background:var(--bar); cursor:move; }
     .popup iframe{ flex:1; width:100%; border:0; background:#000; }
 
     /* Bottom Taskbar */
@@ -178,31 +178,12 @@
         <li class="file"><a onclick="openGame('Space Waves.html','Space Waves')">space_waves.html</a></li>
         <li class="file"><a onclick="openGame('Hollow Knight.html','Hollow Knight')">hollow_knight.exe</a></li>
       </ul>
-
-      <p class="pathlabel">📁 Apps (Soon) </p>
-      <ul>
-        <li class="file"><a onclick="openGame('notes.html','Notepad')">notes.html</a></li>
-        <li class="file"><a onclick="openGame('paint.html','Paint')">paint.html</a></li>
-      </ul>
     </div>
 
     <div class="status">
       <span>STATUS: idle</span>
       <span>SCRBLZ:\\</span>
     </div>
-  </div>
-
-  <!-- Popup -->
-  <div id="popup" class="popup">
-    <div class="titlebar" id="popupTitle">
-      <span id="popupName">Window</span>
-      <span class="spacer"></span>
-      <div class="winbtns">
-        <button class="winbtn" onclick="toggleFullscreen()">▢</button>
-        <button class="winbtn close" onclick="closeGame()">✕</button>
-      </div>
-    </div>
-    <iframe id="gameFrame"></iframe>
   </div>
 
   <!-- Taskbar -->
@@ -227,49 +208,71 @@
   </div>
 
   <script>
-    const popup = document.getElementById('popup');
-    const frame = document.getElementById('gameFrame');
-    const popupName = document.getElementById('popupName');
-    let isDragging=false, offsetX, offsetY;
-    let isFull=false, prev = {};
+    let zIndexCounter = 1000;
 
+    // Dynamically open multiple game windows
     function openGame(file, title){
-      frame.src = "https://scrblz-rar.github.io/web-os/games/" + file;
-      popupName.textContent = title;
-      popup.style.display = "flex";
-    }
-    function closeGame(){
-      popup.style.display = "none";
-      frame.src = "";
-      isFull=false;
-    }
-    function toggleFullscreen(){
-      if(!isFull){
-        prev = {left:popup.style.left, top:popup.style.top, width:popup.style.width, height:popup.style.height};
-        popup.style.left = "0"; popup.style.top = "0";
-        popup.style.width = "100vw"; popup.style.height = "100vh";
-        isFull=true;
-      } else {
-        popup.style.left = prev.left||"100px"; popup.style.top = prev.top||"100px";
-        popup.style.width = prev.width||"800px"; popup.style.height = prev.height||"500px";
-        isFull=false;
-      }
-    }
+      const popup = document.createElement('div');
+      popup.classList.add('popup');
+      popup.style.zIndex = ++zIndexCounter;
 
-    // Dragging game popup
-    const bar = document.getElementById('popupTitle');
-    bar.addEventListener('mousedown', e=>{
-      if(isFull) return;
-      isDragging = true;
-      offsetX = e.clientX - popup.offsetLeft;
-      offsetY = e.clientY - popup.offsetTop;
-    });
-    window.addEventListener('mousemove', e=>{
-      if(!isDragging) return;
-      popup.style.left = (e.clientX - offsetX) + "px";
-      popup.style.top = (e.clientY - offsetY) + "px";
-    });
-    window.addEventListener('mouseup', ()=> isDragging=false);
+      popup.innerHTML = `
+        <div class="titlebar">
+          <span class="popup-title">${title}</span>
+          <span class="spacer"></span>
+          <div class="winbtns">
+            <button class="winbtn fullscreen">▢</button>
+            <button class="winbtn close">✕</button>
+          </div>
+        </div>
+        <iframe src="https://scrblz-rar.github.io/web-os/games/${file}"></iframe>
+      `;
+
+      document.body.appendChild(popup);
+
+      let isDragging = false, offsetX = 0, offsetY = 0;
+      let isFull = false, prev = {};
+
+      const titleBar = popup.querySelector('.titlebar');
+      const closeBtn = popup.querySelector('.close');
+      const fullBtn = popup.querySelector('.fullscreen');
+
+      // Bring to front on click
+      popup.addEventListener('mousedown', () => popup.style.zIndex = ++zIndexCounter);
+
+      // Dragging logic
+      titleBar.addEventListener('mousedown', e => {
+        if(isFull) return;
+        isDragging = true;
+        offsetX = e.clientX - popup.offsetLeft;
+        offsetY = e.clientY - popup.offsetTop;
+      });
+      window.addEventListener('mousemove', e => {
+        if(!isDragging) return;
+        popup.style.left = (e.clientX - offsetX) + "px";
+        popup.style.top = (e.clientY - offsetY) + "px";
+      });
+      window.addEventListener('mouseup', () => isDragging = false);
+
+      // Close window
+      closeBtn.addEventListener('click', () => popup.remove());
+
+      // Fullscreen toggle
+      fullBtn.addEventListener('click', () => {
+        if(!isFull){
+          prev = {left: popup.style.left, top: popup.style.top, width: popup.style.width, height: popup.style.height};
+          popup.style.left = "0"; popup.style.top = "0";
+          popup.style.width = "100vw"; popup.style.height = "100vh";
+          isFull = true;
+        } else {
+          popup.style.left = prev.left || "100px";
+          popup.style.top = prev.top || "100px";
+          popup.style.width = prev.width || "800px";
+          popup.style.height = prev.height || "500px";
+          isFull = false;
+        }
+      });
+    }
 
     // 🎵 Music Player Logic
     const audioPlayer = document.getElementById("audioPlayer");
