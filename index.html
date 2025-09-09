@@ -16,7 +16,7 @@
       min-height:100vh; overflow:hidden;
       background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
       position:relative;
-      user-select:none; /* prevent text selection when dragging */
+      user-select:none;
     }
 
     /* Desktop Icons */
@@ -123,33 +123,22 @@
     <img src="icons/undertale.png" alt="Undertale">
     <span>Undertale</span>
   </div>
-  <div class="icon" style="top:250px; left:40px;" data-file="Tanuki Sunset.html" data-title="Tanuki Sunset">
+  <div class="icon" style="top:250px; left:40px;" data-file="tanuki.html" data-title="Tanuki Sunset">
     <img src="icons/tanuki.png" alt="Tanuki Sunset">
     <span>Tanuki Sunset</span>
   </div>
 
- <!-- Popup Window -->
-<div id="popup" class="popup">
-  <div class="titlebar" id="popupTitle">
-    <span id="popupName">Window</span>
-    <div class="winbtns">
-      <button class="winbtn" onclick="toggleFullscreen()">▢</button>
-      <button class="winbtn close" onclick="closeGame()">✕</button>
+  <!-- Popup Window -->
+  <div id="popup" class="popup">
+    <div class="titlebar" id="popupTitle">
+      <span id="popupName">Window</span>
+      <div class="winbtns">
+        <button class="winbtn" onclick="toggleFullscreen()">▢</button>
+        <button class="winbtn close" onclick="closeGame()">✕</button>
+      </div>
     </div>
+    <iframe id="gameFrame"></iframe>
   </div>
-  <iframe id="gameFrame"></iframe>
-</div>
-
-<script>
-  function openGame(file, title){
-    // now loads games from the "games" folder
-    frame.src = "https://scrblz-rar.github.io/web-os/games/" + file;
-    popupName.textContent = title;
-    popup.style.display = "flex";
-    popup.style.zIndex = Date.now(); // bring to front
-  }
-</script>
-
 
   <!-- Music Player -->
   <div id="musicPlayer">
@@ -166,8 +155,8 @@
   <!-- Taskbar -->
   <div class="taskbar">
     <div class="taskbar-left">
-      <img src="icons/code.png" alt="Code Editor" onclick="openGame('CodeEditor.html','Code Editor')">
-      <img src="icons/paint.png" alt="Paint" onclick="openGame('Paint.html','Paint')">
+      <img src="icons/code.png" alt="Code Editor" onclick="openApp('CodeEditor.html','Code Editor')">
+      <img src="icons/paint.png" alt="Paint" onclick="openApp('Paint.html','Paint')">
       <img src="icons/music.png" alt="Music Player" onclick="toggleMusicPlayer()">
     </div>
     <div id="clock"></div>
@@ -180,12 +169,21 @@
     let isDraggingPopup = false, offsetX, offsetY;
     let isFull = false, prev = {};
 
+    // Open desktop games (in /games)
     function openGame(file, title){
+      frame.src = "https://scrblz-rar.github.io/web-os/games/" + file;
+      popupName.textContent = title;
+      popup.style.display = "flex";
+      popup.style.zIndex = Date.now();
+    }
+    // Open apps (root directory)
+    function openApp(file, title){
       frame.src = "https://scrblz-rar.github.io/web-os/" + file;
       popupName.textContent = title;
       popup.style.display = "flex";
       popup.style.zIndex = Date.now();
     }
+
     function closeGame(){
       popup.style.display = "none";
       frame.src = "";
@@ -203,7 +201,7 @@
       }
     }
 
-    // Smooth dragging
+    // Dragging popup
     const bar = document.getElementById('popupTitle');
     bar.addEventListener('mousedown', e=>{
       if(isFull) return;
@@ -219,7 +217,7 @@
     });
     window.addEventListener('mouseup', ()=> isDraggingPopup=false);
 
-    // Music player toggle and drag
+    // Music player toggle + drag
     const musicPlayer = document.getElementById('musicPlayer');
     const musicBar = document.getElementById('musicTitleBar');
     let isDraggingMusic = false, musicOffsetX, musicOffsetY;
@@ -230,7 +228,6 @@
     function closeMusicPlayer(){
       musicPlayer.style.display = 'none';
     }
-
     musicBar.addEventListener('mousedown', e => {
       isDraggingMusic = true;
       musicOffsetX = e.clientX - musicPlayer.offsetLeft;
@@ -245,7 +242,7 @@
     });
     window.addEventListener('mouseup', ()=> isDraggingMusic = false);
 
-    // Icon behavior: drag and select
+    // Icon drag + double click
     document.querySelectorAll('.icon').forEach(icon=>{
       let dragging=false, dx, dy;
       icon.addEventListener('mousedown', e=>{
@@ -263,7 +260,6 @@
       });
       window.addEventListener('mouseup', ()=> dragging=false);
 
-      // Double click to open game
       icon.addEventListener('dblclick', ()=>{
         const file = icon.dataset.file;
         const title = icon.dataset.title;
