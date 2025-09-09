@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>scrblz hideout</title>
+  <title>web-os</title>
   <style>
     :root{
       --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --accent2:#ff4081;
@@ -13,76 +13,53 @@
     html,body{height:100%}
     body{
       margin:0; font-family:Consolas, monaco, monospace; color:var(--ink);
-      display:grid; place-items:center; min-height:100vh; overflow:hidden;
+      min-height:100vh; overflow:hidden;
       background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
-      position:relative; transition: background 0.4s;
+      position:relative;
     }
-    body.custom-bg { background-size:cover !important; background-position:center !important; }
 
-    /* Floating Theme Button */
-    #themeBtn {
-      position:fixed; top:12px; right:12px;
-      background:var(--accent); color:#fff; border:0; border-radius:4px;
-      padding:6px 10px; cursor:pointer; font-weight:bold;
-      box-shadow:0 2px 6px rgba(0,0,0,.3);
+    /* Desktop Icons */
+    .icon {
+      width: 80px;
+      text-align: center;
+      cursor: pointer;
+      position: absolute;
+      user-select: none;
     }
-    #themePanel {
-      position:fixed; top:50px; right:12px; width:220px;
-      background:var(--glass); border:1px solid var(--border); border-radius:6px;
-      box-shadow:0 6px 18px rgba(0,0,0,.3); padding:12px; display:none;
+    .icon img {
+      width: 64px; height: 64px;
+      display:block; margin:0 auto;
     }
-    #themePanel label { font-size:13px; display:block; margin:6px 0 2px; }
-    #themePanel input[type="color"], #themePanel input[type="file"] { width:100%; }
-
-    /* Window Base */
-    .window{
-      position:relative; max-width:840px; width:min(92vw, 840px);
-      background: var(--glass); border:1px solid var(--border); border-radius:6px;
-      box-shadow: 0 16px 40px rgba(0,0,0,.30);
-      overflow:hidden; display:flex; flex-direction:column;
-      z-index:10;
+    .icon span {
+      display:block;
+      margin-top:4px;
+      font-size:12px;
+      background:rgba(255,255,255,0.4);
+      border-radius:4px;
+      padding:2px 4px;
     }
-    .titlebar{
-      display:flex; align-items:center; gap:10px; padding:6px 10px;
-      border-bottom:1px solid var(--border); background:var(--bar);
-      cursor:move;
-    }
-    .titlebar .icon{ width:14px; height:14px; border-radius:2px; background:var(--accent); box-shadow: inset 0 0 0 1px #888; }
-    .title{ font-weight:700; letter-spacing:.3px; }
-    .titlebar .spacer{ flex:1 }
-    .winbtns{ display:flex; margin-left:auto; border-left:1px solid #d9d9d9 }
-    .winbtn{ width:42px; height:30px; display:grid; place-items:center; background:transparent; border:0; border-left:1px solid #d9d9d9; cursor:pointer; }
-    .winbtn:hover{ background:var(--accent); color:#fff }
-    .winbtn.close:hover{ background:#e81123; color:#fff }
 
-    .wrap{ padding:16px 18px 20px }
-    .pathbar{ display:flex; align-items:center; gap:10px; background:#fff; border:1px solid #a6a6a6; border-radius:4px; padding:8px 10px; box-shadow: inset 0 1px 2px #0001; }
-    .prompt{ color:#333; font-weight:700 }
-    .path{ flex:1; white-space:nowrap; overflow:hidden; }
-
-    h2{ margin:14px 0 6px; text-align:center }
-    .pathlabel{ color:#333; font-weight:700; margin:14px 0 8px }
-    ul{ list-style:none; padding:0; margin:0 }
-    li{ margin:8px 0 }
-    a{ color:var(--accent); font-weight:700; text-decoration:none; cursor:pointer; }
-    a:hover{ text-decoration:underline; text-shadow:0 0 6px rgba(11,94,201,.25) }
-    .folder::before{ content:"\1F4C1  " }
-    .file::before{ content:"\1F4C4  " }
-
-    .status{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 14px; border-top:1px solid var(--border); background:#f7f7f7; font-size:12px }
-
-    /* Popup Game Window */
+    /* Popup Window */
     .popup {
-      position:fixed; top:100px; left:100px;
+      position:absolute; top:100px; left:100px;
       width:800px; height:500px;
       background:var(--glass); border:1px solid var(--border); border-radius:6px;
       box-shadow:0 12px 28px rgba(0,0,0,.35);
-      display:flex; flex-direction:column; overflow:hidden;
+      display:none; flex-direction:column; overflow:hidden;
       z-index:999; resize:both;
     }
-    .popup iframe{ flex:1; width:100%; border:0; background:#000; }
+    .popup .titlebar{
+      background:var(--bar); padding:6px 10px; display:flex; align-items:center;
+      cursor:move; border-bottom:1px solid var(--border);
+    }
+    .popup iframe{ flex:1; border:0; background:#000; }
 
-    /* Bottom Taskbar */
+    .winbtns{ margin-left:auto; display:flex; }
+    .winbtn { border:0; background:transparent; cursor:pointer; padding:0 10px; }
+    .winbtn:hover { background:var(--accent); color:#fff }
+    .winbtn.close:hover { background:#e81123; color:#fff }
+
+    /* Taskbar */
     .taskbar {
       position:fixed; bottom:0; left:0; right:0;
       height:32px; background:var(--bar);
@@ -96,278 +73,113 @@
       border-radius:4px; cursor:pointer; font-weight:bold;
     }
     .taskbar button:hover { background:var(--accent2); }
-
-    /* 🎵 Music Player */
-    #musicPlayer {
-      position:fixed;
-      bottom:40px;
-      right:20px;
-      width:260px;
-      background:var(--glass);
-      border:1px solid var(--border);
-      border-radius:6px;
-      box-shadow:0 6px 18px rgba(0,0,0,.3);
-      display:flex;
-      flex-direction:column;
-      z-index:1200;
-      user-select:none;
-    }
-    #musicPlayer .titlebar {
-      background:var(--bar);
-      cursor:move;
-      font-size:13px;
-      padding:4px 8px;
-    }
-    #musicPlayer .content {
-      padding:8px;
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-    #musicPlayer input[type="file"],
-    #musicPlayer input[type="text"] {
-      font-size:12px;
-      width:100%;
-    }
-    #ytFrame {
-      width:100%;
-      height:160px;
-      display:none;
-      border:0;
-    }
   </style>
 </head>
 <body>
-  <!-- Theme Button + Panel -->
-  <button id="themeBtn">🎨</button>
-  <div id="themePanel">
-    <label>Primary Color</label>
-    <input type="color" id="primaryColor" value="#000000">
-    <label>Secondary Color</label>
-    <input type="color" id="secondaryColor" value="#0000FF">
-    <label>Custom Background</label>
-    <input type="file" id="bgUpload" accept="image/*">
+
+  <!-- Desktop Icons -->
+  <div class="icon" style="top:50px; left:40px;" onclick="openGame('deltarune.html','Deltarune')">
+    <img src="icons/deltarune.png" alt="Deltarune">
+    <span>Deltarune</span>
+  </div>
+  <div class="icon" style="top:150px; left:40px;" onclick="openGame('undertale.html','Undertale')">
+    <img src="icons/undertale.png" alt="Undertale">
+    <span>Undertale</span>
+  </div>
+  <div class="icon" style="top:250px; left:40px;" onclick="openGame('tanuki.html','Tanuki Sunset')">
+    <img src="icons/tanuki.png" alt="Tanuki Sunset">
+    <span>Tanuki Sunset</span>
   </div>
 
-  <!-- File Explorer -->
-  <div class="window" id="explorerWindow">
-    <div class="titlebar">
-      <span class="icon"></span>
-      <span class="title">File Explorer</span>
-      <span class="spacer"></span>
+  <!-- Popup Window -->
+  <div id="popup" class="popup">
+    <div class="titlebar" id="popupTitle">
+      <span id="popupName">Window</span>
       <div class="winbtns">
-        <button class="winbtn close" onclick="document.getElementById('explorerWindow').style.display='none'">✕</button>
+        <button class="winbtn" onclick="toggleFullscreen()">▢</button>
+        <button class="winbtn close" onclick="closeGame()">✕</button>
       </div>
     </div>
-
-    <div class="wrap">
-      <div class="pathbar"><span class="prompt">C:\\</span><span class="path">SCRBLZ_HIDEOUT\></span></div>
-      <h2>Scrblz Hideout</h2>
-
-      <p class="pathlabel">📁 Games</p>
-      <ul>
-        <li class="file"><a onclick="openGame('deltarune.html','Deltarune')">deltarune.exe</a></li>
-        <li class="file"><a onclick="openGame('undertale.html','Undertale')">undertale.exe</a></li>
-        <li class="file"><a onclick="openGame('they_are_coming.html','They Are Coming')">they_are_coming.html</a></li>
-        <li class="file"><a onclick="openGame('Tanuki Sunset.html','Tanuki Sunset')">tanuki_sunset.exe</a></li>
-        <li class="file"><a onclick="openGame('kindergarten_2.html','Kindergarten 2')">kindergarten_2.exe</a></li>
-        <li class="file"><a onclick="openGame('Endoparasitic.html','Endoparasitic')">endoparasitic.exe</a></li>
-        <li class="file"><a onclick="openGame('R.E.P.O.html','R.E.P.O.')">R.E.P.O.exe</a></li>
-        <li class="file"><a onclick="openGame('Sandtris.html','Sandtris')">sandtris.html</a></li>
-        <li class="file"><a onclick="openGame('pizzatower.html','Pizza Tower')">pizza_tower.exe</a></li>
-        <li class="file"><a onclick="openGame('Space Waves.html','Space Waves')">space_waves.html</a></li>
-        <li class="file"><a onclick="openGame('Hollow Knight.html','Hollow Knight')">hollow_knight.exe</a></li>
-        <li class="file"><a onclick="openGame('Sandboxels.html','Sandboxels')">sandboxels.html</a></li>
-        <li class="file"><a onclick="openGame('Minesweeper Mania.html','Minesweeper')">minesweeper.exe</a></li>
-        
-      </ul>
-    </div>
-
-    <div class="status">
-      <span>STATUS: idle</span>
-      <span>SCRBLZ:\\</span>
-    </div>
+    <iframe id="gameFrame"></iframe>
   </div>
 
   <!-- Taskbar -->
   <div class="taskbar">
     <div class="taskbar-left">
-      <button onclick="document.getElementById('explorerWindow').style.display='flex'">📂</button>
       <button onclick="openGame('CodeEditor.html','Code Editor')">&lt;/&gt;</button>
     </div>
     <div id="clock"></div>
   </div>
 
-  <!-- 🎵 Music Player -->
-  <div id="musicPlayer">
-    <div class="titlebar">🎵 Music Player</div>
-    <div class="content">
-      <audio id="audioPlayer" controls style="width:100%"></audio>
-      <input type="file" id="mp3Upload" accept="audio/mp3">
-      <input type="text" id="ytInput" placeholder="YouTube link">
-      <button onclick="loadYouTube()">Play YouTube</button>
-      <iframe id="ytFrame"></iframe>
-    </div>
-  </div>
-
   <script>
-    let zIndexCounter = 1000;
+    const popup = document.getElementById('popup');
+    const frame = document.getElementById('gameFrame');
+    const popupName = document.getElementById('popupName');
+    let isDraggingPopup = false, offsetX, offsetY;
+    let isFull = false, prev = {};
 
-    // Dynamically open multiple game windows
     function openGame(file, title){
-      const popup = document.createElement('div');
-      popup.classList.add('popup');
-      popup.style.zIndex = ++zIndexCounter;
-
-      popup.innerHTML = `
-        <div class="titlebar">
-          <span class="popup-title">${title}</span>
-          <span class="spacer"></span>
-          <div class="winbtns">
-            <button class="winbtn fullscreen">▢</button>
-            <button class="winbtn close">✕</button>
-          </div>
-        </div>
-        <iframe src="https://scrblz-rar.github.io/web-os/games/${file}"></iframe>
-      `;
-
-      document.body.appendChild(popup);
-
-      let isDragging = false, offsetX = 0, offsetY = 0;
-      let isFull = false, prev = {};
-
-      const titleBar = popup.querySelector('.titlebar');
-      const closeBtn = popup.querySelector('.close');
-      const fullBtn = popup.querySelector('.fullscreen');
-
-      // Bring to front on click
-      popup.addEventListener('mousedown', () => popup.style.zIndex = ++zIndexCounter);
-
-      // Dragging logic
-      titleBar.addEventListener('mousedown', e => {
-        if(isFull) return;
-        isDragging = true;
-        offsetX = e.clientX - popup.offsetLeft;
-        offsetY = e.clientY - popup.offsetTop;
-      });
-      window.addEventListener('mousemove', e => {
-        if(!isDragging) return;
-        popup.style.left = (e.clientX - offsetX) + "px";
-        popup.style.top = (e.clientY - offsetY) + "px";
-      });
-      window.addEventListener('mouseup', () => isDragging = false);
-
-      // Close window
-      closeBtn.addEventListener('click', () => popup.remove());
-
-      // Fullscreen toggle
-      fullBtn.addEventListener('click', () => {
-        if(!isFull){
-          prev = {left: popup.style.left, top: popup.style.top, width: popup.style.width, height: popup.style.height};
-          popup.style.left = "0"; popup.style.top = "0";
-          popup.style.width = "100vw"; popup.style.height = "100vh";
-          isFull = true;
-        } else {
-          popup.style.left = prev.left || "100px";
-          popup.style.top = prev.top || "100px";
-          popup.style.width = prev.width || "800px";
-          popup.style.height = prev.height || "500px";
-          isFull = false;
-        }
-      });
+      frame.src = "https://scrblz-rar.github.io/web-os/" + file;
+      popupName.textContent = title;
+      popup.style.display = "flex";
+      popup.style.zIndex = Date.now(); // bring to front
     }
-
-    // 🎵 Music Player Logic
-    const audioPlayer = document.getElementById("audioPlayer");
-    const mp3Upload = document.getElementById("mp3Upload");
-    const ytInput = document.getElementById("ytInput");
-    const ytFrame = document.getElementById("ytFrame");
-    const musicPlayer = document.getElementById("musicPlayer");
-    const musicBar = musicPlayer.querySelector(".titlebar");
-
-    mp3Upload.onchange = e=>{
-      const file = e.target.files[0];
-      if(file){
-        const url = URL.createObjectURL(file);
-        ytFrame.style.display="none";
-        audioPlayer.style.display="block";
-        audioPlayer.src = url;
-        audioPlayer.play();
-      }
-    };
-
-    function loadYouTube(){
-      let url = ytInput.value.trim();
-      if(!url) return;
-      let videoId = "";
-      try {
-        const urlObj = new URL(url);
-        if(urlObj.hostname.includes("youtube.com")){
-          videoId = urlObj.searchParams.get("v");
-        } else if(urlObj.hostname.includes("youtu.be")){
-          videoId = urlObj.pathname.slice(1);
-        }
-      } catch(e){}
-      if(videoId){
-        audioPlayer.pause();
-        audioPlayer.style.display="none";
-        ytFrame.style.display="block";
-        ytFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    function closeGame(){
+      popup.style.display = "none";
+      frame.src = "";
+      isFull=false;
+    }
+    function toggleFullscreen(){
+      if(!isFull){
+        prev = {left:popup.style.left, top:popup.style.top, width:popup.style.width, height:popup.style.height};
+        popup.style.left="0"; popup.style.top="0"; popup.style.width="100vw"; popup.style.height="100vh";
+        isFull=true;
+      } else {
+        popup.style.left=prev.left||"100px"; popup.style.top=prev.top||"100px";
+        popup.style.width=prev.width||"800px"; popup.style.height=prev.height||"500px";
+        isFull=false;
       }
     }
 
-    // Dragging music player
-    let draggingMusic=false, mOffsetX=0, mOffsetY=0;
-    musicBar.addEventListener("mousedown", e=>{
-      draggingMusic=true;
-      mOffsetX = e.clientX - musicPlayer.offsetLeft;
-      mOffsetY = e.clientY - musicPlayer.offsetTop;
-      document.body.style.userSelect="none";
+    // Dragging popup
+    const bar = document.getElementById('popupTitle');
+    bar.addEventListener('mousedown', e=>{
+      if(isFull) return;
+      isDraggingPopup = true;
+      offsetX = e.clientX - popup.offsetLeft;
+      offsetY = e.clientY - popup.offsetTop;
     });
-    window.addEventListener("mousemove", e=>{
-      if(!draggingMusic) return;
-      musicPlayer.style.left = (e.clientX - mOffsetX) + "px";
-      musicPlayer.style.top = (e.clientY - mOffsetY) + "px";
-      musicPlayer.style.right = "auto";
-      musicPlayer.style.bottom = "auto";
+    window.addEventListener('mousemove', e=>{
+      if(!isDraggingPopup) return;
+      popup.style.left = (e.clientX - offsetX) + "px";
+      popup.style.top = (e.clientY - offsetY) + "px";
     });
-    window.addEventListener("mouseup", ()=>{
-      draggingMusic=false;
-      document.body.style.userSelect="auto";
-    });
+    window.addEventListener('mouseup', ()=> isDraggingPopup=false);
 
-    // THEME CUSTOMIZER
-    const themeBtn = document.getElementById("themeBtn");
-    const themePanel = document.getElementById("themePanel");
-    themeBtn.onclick = ()=> themePanel.style.display = themePanel.style.display==="block" ? "none":"block";
-
-    document.getElementById("primaryColor").oninput = e=>{
-      document.documentElement.style.setProperty("--accent", e.target.value);
-    }
-    document.getElementById("secondaryColor").oninput = e=>{
-      document.documentElement.style.setProperty("--bar", e.target.value);
-    }
-    document.getElementById("bgUpload").onchange = e=>{
-      const file = e.target.files[0];
-      if(file){
-        const reader = new FileReader();
-        reader.onload = evt=>{
-          document.body.classList.add("custom-bg");
-          document.body.style.background = `url(${evt.target.result}) no-repeat center center fixed`;
-          document.body.style.backgroundSize = "cover";
-        };
-        reader.readAsDataURL(file);
-      }
-    };
+    // Make desktop icons draggable
+    document.querySelectorAll('.icon').forEach(icon=>{
+      let dragging=false, dx, dy;
+      icon.addEventListener('mousedown', e=>{
+        dragging=true;
+        dx = e.clientX - icon.offsetLeft;
+        dy = e.clientY - icon.offsetTop;
+      });
+      window.addEventListener('mousemove', e=>{
+        if(!dragging) return;
+        icon.style.left = (e.clientX - dx)+"px";
+        icon.style.top = (e.clientY - dy)+"px";
+      });
+      window.addEventListener('mouseup', ()=> dragging=false);
+    });
 
     // Clock
     function updateClock() {
       const now = new Date();
-      const time = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      const time = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
       const date = now.toLocaleDateString();
       document.getElementById('clock').textContent = `${date} ${time}`;
     }
-    setInterval(updateClock, 1000);
+    setInterval(updateClock,1000);
     updateClock();
   </script>
 </body>
