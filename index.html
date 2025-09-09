@@ -2,185 +2,193 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>web-os</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Web-OS Desktop</title>
   <style>
-    :root{
-      --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --accent2:#ff4081;
-      --glass:#ffffffcc; --border:#b5b5b5; --bar:#f0f0f0;
+    :root {
+      --primary-color: #ffffff;
+      --secondary-color: rgba(255, 255, 255, 0.1);
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:Consolas, monaco, monospace; color:var(--ink);
-      min-height:100vh; overflow:hidden;
-      background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
-      position:relative;
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #1e1e1e;
+      color: var(--primary-color);
+      overflow: hidden;
+    }
+
+    /* Top bar */
+    .top-bar {
+      background: var(--primary-color);
+      color: #000;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    /* Desktop */
+    .desktop {
+      position: relative;
+      height: calc(100vh - 70px);
+      background: var(--secondary-color);
     }
 
     /* Desktop Icons */
     .icon {
-      width: 80px;
+      position: absolute;
+      width: 64px;
       text-align: center;
       cursor: pointer;
-      position: absolute;
       user-select: none;
     }
+
     .icon img {
-      width: 64px; height: 64px;
-      display:block; margin:0 auto;
+      width: 64px;
+      height: 64px;
+      display: block;
     }
+
     .icon span {
-      display:block;
-      margin-top:4px;
-      font-size:12px;
-      background:rgba(255,255,255,0.4);
-      border-radius:4px;
-      padding:2px 4px;
+      font-size: 12px;
+      color: var(--primary-color);
     }
 
-    /* Popup Window */
-    .popup {
-      position:absolute; top:100px; left:100px;
-      width:800px; height:500px;
-      background:var(--glass); border:1px solid var(--border); border-radius:6px;
-      box-shadow:0 12px 28px rgba(0,0,0,.35);
-      display:none; flex-direction:column; overflow:hidden;
-      z-index:999; resize:both;
+    /* Windows */
+    .window {
+      position: absolute;
+      top: 100px;
+      left: 100px;
+      width: 400px;
+      height: 300px;
+      background: #2c2c2c;
+      border: 1px solid #444;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      display: none;
+      flex-direction: column;
     }
-    .popup .titlebar{
-      background:var(--bar); padding:6px 10px; display:flex; align-items:center;
-      cursor:move; border-bottom:1px solid var(--border);
-    }
-    .popup iframe{ flex:1; border:0; background:#000; }
 
-    .winbtns{ margin-left:auto; display:flex; }
-    .winbtn { border:0; background:transparent; cursor:pointer; padding:0 10px; }
-    .winbtn:hover { background:var(--accent); color:#fff }
-    .winbtn.close:hover { background:#e81123; color:#fff }
+    .window-header {
+      background: var(--primary-color);
+      color: black;
+      padding: 5px;
+      cursor: move;
+    }
 
-    /* Taskbar */
-    .taskbar {
-      position:fixed; bottom:0; left:0; right:0;
-      height:32px; background:var(--bar);
-      border-top:1px solid var(--border);
-      display:flex; justify-content:space-between; align-items:center;
-      padding:0 10px; font-size:13px; z-index:1000;
+    .window iframe {
+      flex-grow: 1;
+      border: none;
+      width: 100%;
     }
-    .taskbar-left { display:flex; gap:6px; }
-    .taskbar button {
-      background:var(--accent); color:#fff; border:none; padding:4px 10px;
-      border-radius:4px; cursor:pointer; font-weight:bold;
+
+    /* Bottom bar */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--primary-color);
+      color: #000;
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 10px;
+      font-size: 14px;
     }
-    .taskbar button:hover { background:var(--accent2); }
   </style>
 </head>
 <body>
-
-  <!-- Desktop Icons -->
-  <div class="icon" style="top:50px; left:40px;" onclick="openGame('deltarune.html','Deltarune')">
-    <img src="icons/deltarune.png" alt="Deltarune">
-    <span>Deltarune</span>
-  </div>
-  <div class="icon" style="top:150px; left:40px;" onclick="openGame('undertale.html','Undertale')">
-    <img src="icons/undertale.png" alt="Undertale">
-    <span>Undertale</span>
-  </div>
-  <div class="icon" style="top:250px; left:40px;" onclick="openGame('tanuki.html','Tanuki Sunset')">
-    <img src="icons/tanuki.png" alt="Tanuki Sunset">
-    <span>Tanuki Sunset</span>
-  </div>
-
-  <!-- Popup Window -->
-  <div id="popup" class="popup">
-    <div class="titlebar" id="popupTitle">
-      <span id="popupName">Window</span>
-      <div class="winbtns">
-        <button class="winbtn" onclick="toggleFullscreen()">▢</button>
-        <button class="winbtn close" onclick="closeGame()">✕</button>
-      </div>
+  <div class="top-bar">Web-OS</div>
+  
+  <div class="desktop">
+    <!-- Example desktop icon -->
+    <div class="icon" style="top:20px; left:20px;" data-app="code_editor.html">
+      <img src="https://img.icons8.com/ios-filled/50/ffffff/source-code.png" alt="Code Editor"/>
+      <span>Code Editor</span>
     </div>
-    <iframe id="gameFrame"></iframe>
   </div>
 
-  <!-- Taskbar -->
-  <div class="taskbar">
-    <div class="taskbar-left">
-      <button onclick="openGame('CodeEditor.html','Code Editor')">&lt;/&gt;</button>
-    </div>
+  <!-- Window Template -->
+  <div class="window" id="appWindow">
+    <div class="window-header">Application <button onclick="closeWindow()">X</button></div>
+    <iframe id="appFrame"></iframe>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="bottom-bar">
+    <div>Start</div>
     <div id="clock"></div>
   </div>
 
   <script>
-    const popup = document.getElementById('popup');
-    const frame = document.getElementById('gameFrame');
-    const popupName = document.getElementById('popupName');
-    let isDraggingPopup = false, offsetX, offsetY;
-    let isFull = false, prev = {};
-
-    function openGame(file, title){
-      frame.src = "https://scrblz-rar.github.io/web-os/" + file;
-      popupName.textContent = title;
-      popup.style.display = "flex";
-      popup.style.zIndex = Date.now(); // bring to front
-    }
-    function closeGame(){
-      popup.style.display = "none";
-      frame.src = "";
-      isFull=false;
-    }
-    function toggleFullscreen(){
-      if(!isFull){
-        prev = {left:popup.style.left, top:popup.style.top, width:popup.style.width, height:popup.style.height};
-        popup.style.left="0"; popup.style.top="0"; popup.style.width="100vw"; popup.style.height="100vh";
-        isFull=true;
-      } else {
-        popup.style.left=prev.left||"100px"; popup.style.top=prev.top||"100px";
-        popup.style.width=prev.width||"800px"; popup.style.height=prev.height||"500px";
-        isFull=false;
-      }
-    }
-
-    // Dragging popup
-    const bar = document.getElementById('popupTitle');
-    bar.addEventListener('mousedown', e=>{
-      if(isFull) return;
-      isDraggingPopup = true;
-      offsetX = e.clientX - popup.offsetLeft;
-      offsetY = e.clientY - popup.offsetTop;
-    });
-    window.addEventListener('mousemove', e=>{
-      if(!isDraggingPopup) return;
-      popup.style.left = (e.clientX - offsetX) + "px";
-      popup.style.top = (e.clientY - offsetY) + "px";
-    });
-    window.addEventListener('mouseup', ()=> isDraggingPopup=false);
-
-    // Make desktop icons draggable
-    document.querySelectorAll('.icon').forEach(icon=>{
-      let dragging=false, dx, dy;
-      icon.addEventListener('mousedown', e=>{
-        dragging=true;
-        dx = e.clientX - icon.offsetLeft;
-        dy = e.clientY - icon.offsetTop;
-      });
-      window.addEventListener('mousemove', e=>{
-        if(!dragging) return;
-        icon.style.left = (e.clientX - dx)+"px";
-        icon.style.top = (e.clientY - dy)+"px";
-      });
-      window.addEventListener('mouseup', ()=> dragging=false);
-    });
-
     // Clock
     function updateClock() {
       const now = new Date();
-      const time = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-      const date = now.toLocaleDateString();
-      document.getElementById('clock').textContent = `${date} ${time}`;
+      document.getElementById("clock").textContent = 
+        now.toLocaleTimeString() + " " + now.toLocaleDateString();
     }
-    setInterval(updateClock,1000);
+    setInterval(updateClock, 1000);
     updateClock();
+
+    // Make icons draggable
+    const icons = document.querySelectorAll('.icon');
+    icons.forEach(icon => {
+      let offsetX, offsetY, dragging = false;
+
+      icon.addEventListener('mousedown', e => {
+        dragging = true;
+        offsetX = e.clientX - icon.offsetLeft;
+        offsetY = e.clientY - icon.offsetTop;
+      });
+
+      document.addEventListener('mousemove', e => {
+        if (dragging) {
+          icon.style.left = (e.clientX - offsetX) + 'px';
+          icon.style.top = (e.clientY - offsetY) + 'px';
+        }
+      });
+
+      document.addEventListener('mouseup', () => dragging = false);
+
+      // Double click to open app
+      icon.addEventListener('dblclick', () => {
+        openApp(icon.dataset.app);
+      });
+    });
+
+    // Window handling
+    function openApp(app) {
+      const win = document.getElementById("appWindow");
+      const frame = document.getElementById("appFrame");
+      frame.src = app;
+      win.style.display = "flex";
+    }
+
+    function closeWindow() {
+      document.getElementById("appWindow").style.display = "none";
+      document.getElementById("appFrame").src = "";
+    }
+
+    // Dragging windows
+    const win = document.getElementById("appWindow");
+    const header = win.querySelector('.window-header');
+    let isDragging = false, winX, winY, mouseX, mouseY;
+
+    header.addEventListener('mousedown', e => {
+      isDragging = true;
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      winX = win.offsetLeft;
+      winY = win.offsetTop;
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (isDragging) {
+        win.style.left = winX + (e.clientX - mouseX) + "px";
+        win.style.top = winY + (e.clientY - mouseY) + "px";
+      }
+    });
+
+    document.addEventListener('mouseup', () => isDragging = false);
   </script>
 </body>
 </html>
