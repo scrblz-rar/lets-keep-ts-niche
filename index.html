@@ -6,41 +6,44 @@
   <title>web-os</title>
   <style>
     :root{
-      --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --accent-hover:#0078d7;
+      --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --accent2:#0078D7;
       --glass:#ffffffcc; --border:#b5b5b5; --bar:#f0f0f0;
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
+    html,body{height:100%; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
     body{
-      margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:var(--ink);
+      color:var(--ink);
       min-height:100vh; overflow:hidden;
       background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
       position:relative;
+      user-select:none; /* prevent text selection when dragging */
     }
 
     /* Desktop Icons */
     .icon {
       width: 80px;
       text-align: center;
-      cursor: default;
+      cursor: pointer;
       position: absolute;
-      user-select: none;
-      padding:4px;
-      border-radius:4px;
     }
     .icon img {
       width: 64px; height: 64px;
       display:block; margin:0 auto;
+      pointer-events: none;
     }
     .icon span {
       display:block;
       margin-top:4px;
       font-size:12px;
-      text-align:center;
-      color:var(--ink);
+      background:rgba(255,255,255,0.4);
+      border-radius:4px;
+      padding:2px 4px;
+      pointer-events: none;
     }
     .icon.selected {
-      background: rgba(128,128,128,0.3);
+      background:rgba(128,128,128,0.4);
+      border-radius:6px;
+      padding:4px 0;
     }
 
     /* Popup Window */
@@ -54,74 +57,58 @@
     }
     .popup .titlebar{
       background:var(--bar); padding:6px 10px; display:flex; align-items:center;
-      cursor:grab; border-bottom:1px solid var(--border);
+      cursor:move; border-bottom:1px solid var(--border);
     }
     .popup iframe{ flex:1; border:0; background:#000; }
 
     .winbtns{ margin-left:auto; display:flex; }
     .winbtn { border:0; background:transparent; cursor:pointer; padding:0 10px; }
-    .winbtn:hover { background:var(--accent-hover); color:#fff }
+    .winbtn:hover { background:var(--accent); color:#fff }
     .winbtn.close:hover { background:#e81123; color:#fff }
 
     /* Music Player */
     #musicPlayer {
-      position:absolute;
-      bottom:60px;
-      right:20px;
-      width:260px;
-      background:var(--glass);
-      border:1px solid var(--border);
-      border-radius:6px;
-      box-shadow:0 6px 18px rgba(0,0,0,.3);
-      display:none;
-      flex-direction:column;
-      z-index:1200;
-      resize:both;
+      position: fixed;
+      bottom: 40px;
+      right: 20px;
+      width: 300px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: none;
+      flex-direction: column;
+      z-index: 1200;
     }
     #musicPlayer .titlebar {
-      background:var(--bar);
-      cursor:grab;
-      font-size:13px;
-      padding:6px 8px;
-      display:flex;
-      align-items:center;
+      background: var(--bar);
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: move;
+      border-bottom: 1px solid var(--border);
+    }
+    #musicPlayer .titlebar button {
+      border: none;
+      background: transparent;
+      cursor: pointer;
     }
     #musicPlayer .content {
-      padding:8px;
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-    #musicPlayer input[type="file"],
-    #musicPlayer input[type="text"] {
-      font-size:12px;
-      width:100%;
-    }
-    #ytFrame {
-      width:100%;
-      height:160px;
-      display:none;
-      border:0;
+      padding: 10px;
     }
 
     /* Taskbar */
     .taskbar {
       position:fixed; bottom:0; left:0; right:0;
-      height:40px; background:var(--bar);
+      height:32px; background:var(--bar);
       border-top:1px solid var(--border);
       display:flex; justify-content:space-between; align-items:center;
-      padding:0 10px; z-index:1000;
+      padding:0 10px; font-size:13px; z-index:1000;
     }
-    .taskbar-left { display:flex; gap:10px; align-items:center; }
+    .taskbar-left { display:flex; gap:6px; align-items:center; }
     .taskbar-left img {
-      width:24px; height:24px; cursor:pointer;
-    }
-    .taskbar-left img:hover {
-      background:var(--accent-hover);
-      border-radius:4px;
-    }
-    #clock {
-      font-size:14px;
+      height:24px; width:24px; cursor:pointer;
     }
   </style>
 </head>
@@ -155,27 +142,22 @@
 
   <!-- Music Player -->
   <div id="musicPlayer">
-    <div class="titlebar" id="musicBar">
-      <span>🎵 Music Player</span>
-      <div class="winbtns">
-        <button class="winbtn close" onclick="document.getElementById('musicPlayer').style.display='none'">✕</button>
-      </div>
+    <div class="titlebar" id="musicTitleBar">
+      <span>Music Player</span>
+      <button onclick="closeMusicPlayer()">✕</button>
     </div>
     <div class="content">
-      <audio id="audioPlayer" controls style="width:100%"></audio>
       <input type="file" id="mp3Upload" accept="audio/mp3">
-      <input type="text" id="ytInput" placeholder="YouTube link">
-      <button onclick="loadYouTube()">Play YouTube</button>
-      <iframe id="ytFrame"></iframe>
+      <audio id="audioPlayer" controls style="width:100%; margin-top:8px;"></audio>
     </div>
   </div>
 
   <!-- Taskbar -->
   <div class="taskbar">
     <div class="taskbar-left">
-      <img src="icons/code.png" alt="Code Editor" title="Code Editor" onclick="openGame('CodeEditor.html','Code Editor')">
-      <img src="icons/paint.png" alt="Paint" title="Paint" onclick="openGame('paint.html','Paint')">
-      <img src="icons/music.png" alt="Music Player" title="Music Player" onclick="toggleMusicPlayer()">
+      <img src="icons/code.png" alt="Code Editor" onclick="openGame('CodeEditor.html','Code Editor')">
+      <img src="icons/paint.png" alt="Paint" onclick="openGame('Paint.html','Paint')">
+      <img src="icons/music.png" alt="Music Player" onclick="toggleMusicPlayer()">
     </div>
     <div id="clock"></div>
   </div>
@@ -210,115 +192,82 @@
       }
     }
 
-    // Dragging popup with locked cursor offset
+    // Smooth dragging
     const bar = document.getElementById('popupTitle');
     bar.addEventListener('mousedown', e=>{
       if(isFull) return;
       isDraggingPopup = true;
       offsetX = e.clientX - popup.offsetLeft;
       offsetY = e.clientY - popup.offsetTop;
-      bar.style.cursor = 'grabbing';
+      e.preventDefault();
     });
     window.addEventListener('mousemove', e=>{
       if(!isDraggingPopup) return;
       popup.style.left = (e.clientX - offsetX) + "px";
       popup.style.top = (e.clientY - offsetY) + "px";
     });
-    window.addEventListener('mouseup', ()=>{
-      isDraggingPopup=false;
-      bar.style.cursor = 'grab';
-    });
+    window.addEventListener('mouseup', ()=> isDraggingPopup=false);
 
-    // Music player toggle and dragging
-    function toggleMusicPlayer(){
-      const musicPlayer = document.getElementById('musicPlayer');
-      musicPlayer.style.display = (musicPlayer.style.display === 'flex') ? 'none' : 'flex';
-    }
-
+    // Music player toggle and drag
     const musicPlayer = document.getElementById('musicPlayer');
-    const musicBar = document.getElementById('musicBar');
-    let isDraggingMusic = false, mOffsetX, mOffsetY;
+    const musicBar = document.getElementById('musicTitleBar');
+    let isDraggingMusic = false, musicOffsetX, musicOffsetY;
 
-    musicBar.addEventListener('mousedown', e=>{
-      isDraggingMusic = true;
-      mOffsetX = e.clientX - musicPlayer.offsetLeft;
-      mOffsetY = e.clientY - musicPlayer.offsetTop;
-      musicBar.style.cursor = 'grabbing';
-    });
-    window.addEventListener('mousemove', e=>{
-      if(!isDraggingMusic) return;
-      musicPlayer.style.left = (e.clientX - mOffsetX) + "px";
-      musicPlayer.style.top = (e.clientY - mOffsetY) + "px";
-    });
-    window.addEventListener('mouseup', ()=>{
-      isDraggingMusic=false;
-      musicBar.style.cursor = 'grab';
-    });
-
-    // Music Player Logic
-    const audioPlayer = document.getElementById("audioPlayer");
-    const mp3Upload = document.getElementById("mp3Upload");
-    const ytInput = document.getElementById("ytInput");
-    const ytFrame = document.getElementById("ytFrame");
-
-    mp3Upload.onchange = e=>{
-      const file = e.target.files[0];
-      if(file){
-        const url = URL.createObjectURL(file);
-        ytFrame.style.display="none";
-        audioPlayer.style.display="block";
-        audioPlayer.src = url;
-        audioPlayer.play();
-      }
-    };
-
-    function loadYouTube(){
-      let url = ytInput.value.trim();
-      if(!url) return;
-      let videoId = "";
-      try {
-        const urlObj = new URL(url);
-        if(urlObj.hostname.includes("youtube.com")){
-          videoId = urlObj.searchParams.get("v");
-        } else if(urlObj.hostname.includes("youtu.be")){
-          videoId = urlObj.pathname.slice(1);
-        }
-      } catch(e){}
-      if(videoId){
-        audioPlayer.pause();
-        audioPlayer.style.display="none";
-        ytFrame.style.display="block";
-        ytFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-      }
+    function toggleMusicPlayer(){
+      musicPlayer.style.display = musicPlayer.style.display === 'flex' ? 'none' : 'flex';
+    }
+    function closeMusicPlayer(){
+      musicPlayer.style.display = 'none';
     }
 
-    // Desktop Icons dragging + select highlight
+    musicBar.addEventListener('mousedown', e => {
+      isDraggingMusic = true;
+      musicOffsetX = e.clientX - musicPlayer.offsetLeft;
+      musicOffsetY = e.clientY - musicPlayer.offsetTop;
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', e => {
+      if(!isDraggingMusic) return;
+      musicPlayer.style.left = (e.clientX - musicOffsetX) + 'px';
+      musicPlayer.style.top = (e.clientY - musicOffsetY) + 'px';
+      musicPlayer.style.position = 'absolute';
+    });
+    window.addEventListener('mouseup', ()=> isDraggingMusic = false);
+
+    // Icon behavior: drag and select
     document.querySelectorAll('.icon').forEach(icon=>{
       let dragging=false, dx, dy;
-
       icon.addEventListener('mousedown', e=>{
-        e.preventDefault();
         document.querySelectorAll('.icon').forEach(i=>i.classList.remove('selected'));
         icon.classList.add('selected');
         dragging=true;
         dx = e.clientX - icon.offsetLeft;
         dy = e.clientY - icon.offsetTop;
+        e.preventDefault();
       });
-
       window.addEventListener('mousemove', e=>{
         if(!dragging) return;
         icon.style.left = (e.clientX - dx)+"px";
         icon.style.top = (e.clientY - dy)+"px";
       });
-
       window.addEventListener('mouseup', ()=> dragging=false);
 
-      // Double click to open
+      // Double click to open game
       icon.addEventListener('dblclick', ()=>{
         const file = icon.dataset.file;
         const title = icon.dataset.title;
         openGame(file, title);
       });
+    });
+
+    // MP3 upload
+    document.getElementById('mp3Upload').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if(file){
+        const audio = document.getElementById('audioPlayer');
+        audio.src = URL.createObjectURL(file);
+        audio.play();
+      }
     });
 
     // Clock
