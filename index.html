@@ -3,192 +3,185 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Web-OS Desktop</title>
+  <title>Web-OS</title>
   <style>
     :root {
-      --primary-color: #ffffff;
-      --secondary-color: rgba(255, 255, 255, 0.1);
+      --primary-color: #ffffff; /* text + bars */
+      --secondary-color: rgba(255, 255, 255, 0.1); /* panels/windows */
     }
-
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #1e1e1e;
       color: var(--primary-color);
+      height: 100vh;
       overflow: hidden;
+      position: relative;
     }
-
-    /* Top bar */
-    .top-bar {
-      background: var(--primary-color);
-      color: #000;
-      padding: 10px;
-      text-align: center;
-      font-weight: bold;
-    }
-
     /* Desktop */
     .desktop {
-      position: relative;
-      height: calc(100vh - 70px);
-      background: var(--secondary-color);
-    }
-
-    /* Desktop Icons */
-    .icon {
       position: absolute;
-      width: 64px;
+      top: 0; left: 0; right: 0; bottom: 30px;
+      background: url('wallpaper.jpg') center/cover no-repeat;
+    }
+    /* Icons */
+    .icon {
+      width: 80px;
       text-align: center;
+      color: var(--primary-color);
+      position: absolute;
       cursor: pointer;
       user-select: none;
     }
-
     .icon img {
-      width: 64px;
-      height: 64px;
+      width: 48px;
+      height: 48px;
       display: block;
+      margin: 0 auto 5px;
     }
-
-    .icon span {
-      font-size: 12px;
-      color: var(--primary-color);
+    .icon:hover {
+      background: rgba(255,255,255,0.1);
+      border-radius: 6px;
     }
-
-    /* Windows */
+    /* Window */
     .window {
       position: absolute;
       top: 100px;
       left: 100px;
-      width: 400px;
-      height: 300px;
-      background: #2c2c2c;
-      border: 1px solid #444;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      width: 500px;
+      height: 400px;
+      background: var(--secondary-color);
+      border: 1px solid #555;
+      border-radius: 8px;
+      overflow: hidden;
       display: none;
-      flex-direction: column;
     }
-
-    .window-header {
+    .window .title-bar {
       background: var(--primary-color);
-      color: black;
+      color: #000;
       padding: 5px;
       cursor: move;
+      font-weight: bold;
     }
-
     .window iframe {
-      flex-grow: 1;
+      width: 100%;
+      height: calc(100% - 25px);
       border: none;
-      width: 100%;
     }
-
-    /* Bottom bar */
-    .bottom-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
+    /* Taskbar */
+    .taskbar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 30px;
       background: var(--primary-color);
       color: #000;
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      padding: 5px 10px;
-      font-size: 14px;
+      padding: 0 10px;
+    }
+    .task-icons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .task-icons span {
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div class="top-bar">Web-OS</div>
-  
   <div class="desktop">
-    <!-- Example desktop icon -->
-    <div class="icon" style="top:20px; left:20px;" data-app="code_editor.html">
-      <img src="https://img.icons8.com/ios-filled/50/ffffff/source-code.png" alt="Code Editor"/>
-      <span>Code Editor</span>
+    <!-- Example desktop icons -->
+    <div class="icon" style="top:40px; left:40px;" data-app="ssf2.html">
+      <img src="game-icon.png" alt="SSF2"/>
+      <span>SSF2</span>
+    </div>
+    <div class="icon" style="top:140px; left:40px;" data-app="code_editor.html">
+      <img src="code-icon.png" alt="Code"/>
+      <span>Code</span>
     </div>
   </div>
 
-  <!-- Window Template -->
+  <!-- Window -->
   <div class="window" id="appWindow">
-    <div class="window-header">Application <button onclick="closeWindow()">X</button></div>
+    <div class="title-bar">App Window <span style="float:right;cursor:pointer;" onclick="closeWindow()">✖</span></div>
     <iframe id="appFrame"></iframe>
   </div>
 
-  <!-- Bottom Bar -->
-  <div class="bottom-bar">
-    <div>Start</div>
+  <!-- Taskbar -->
+  <div class="taskbar">
+    <div class="task-icons">
+      <span>🎵</span>
+      <audio id="player" controls style="height:24px;">
+        <source src="music.mp3" type="audio/mpeg">
+      </audio>
+    </div>
     <div id="clock"></div>
   </div>
 
   <script>
     // Clock
     function updateClock() {
-      const now = new Date();
-      document.getElementById("clock").textContent = 
-        now.toLocaleTimeString() + " " + now.toLocaleDateString();
+      document.getElementById("clock").textContent =
+        new Date().toLocaleTimeString();
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Make icons draggable
-    const icons = document.querySelectorAll('.icon');
-    icons.forEach(icon => {
-      let offsetX, offsetY, dragging = false;
-
-      icon.addEventListener('mousedown', e => {
-        dragging = true;
-        offsetX = e.clientX - icon.offsetLeft;
-        offsetY = e.clientY - icon.offsetTop;
-      });
-
-      document.addEventListener('mousemove', e => {
-        if (dragging) {
-          icon.style.left = (e.clientX - offsetX) + 'px';
-          icon.style.top = (e.clientY - offsetY) + 'px';
-        }
-      });
-
-      document.addEventListener('mouseup', () => dragging = false);
-
-      // Double click to open app
-      icon.addEventListener('dblclick', () => {
-        openApp(icon.dataset.app);
-      });
-    });
-
-    // Window handling
+    // Open apps
     function openApp(app) {
       const win = document.getElementById("appWindow");
       const frame = document.getElementById("appFrame");
       frame.src = app;
-      win.style.display = "flex";
+      win.style.display = "block";
     }
-
     function closeWindow() {
       document.getElementById("appWindow").style.display = "none";
-      document.getElementById("appFrame").src = "";
     }
 
-    // Dragging windows
-    const win = document.getElementById("appWindow");
-    const header = win.querySelector('.window-header');
-    let isDragging = false, winX, winY, mouseX, mouseY;
+    // Make window draggable
+    (function() {
+      const win = document.getElementById("appWindow");
+      const bar = win.querySelector(".title-bar");
+      let offsetX, offsetY, dragging=false;
 
-    header.addEventListener('mousedown', e => {
-      isDragging = true;
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-      winX = win.offsetLeft;
-      winY = win.offsetTop;
+      bar.addEventListener("mousedown", e => {
+        dragging = true;
+        offsetX = e.clientX - win.offsetLeft;
+        offsetY = e.clientY - win.offsetTop;
+      });
+      document.addEventListener("mousemove", e => {
+        if (dragging) {
+          win.style.left = (e.clientX - offsetX) + "px";
+          win.style.top = (e.clientY - offsetY) + "px";
+        }
+      });
+      document.addEventListener("mouseup", () => dragging=false);
+    })();
+
+    // Icons: draggable + open on double click ONLY
+    document.querySelectorAll('.icon').forEach(icon => {
+      let offsetX, offsetY, isDragging = false;
+
+      icon.addEventListener('mousedown', e => {
+        isDragging = true;
+        offsetX = e.clientX - icon.offsetLeft;
+        offsetY = e.clientY - icon.offsetTop;
+      });
+      document.addEventListener('mousemove', e => {
+        if (isDragging) {
+          icon.style.left = (e.clientX - offsetX) + 'px';
+          icon.style.top = (e.clientY - offsetY) + 'px';
+        }
+      });
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+      icon.addEventListener('dblclick', () => {
+        openApp(icon.dataset.app);
+      });
     });
-
-    document.addEventListener('mousemove', e => {
-      if (isDragging) {
-        win.style.left = winX + (e.clientX - mouseX) + "px";
-        win.style.top = winY + (e.clientY - mouseY) + "px";
-      }
-    });
-
-    document.addEventListener('mouseup', () => isDragging = false);
   </script>
 </body>
 </html>
