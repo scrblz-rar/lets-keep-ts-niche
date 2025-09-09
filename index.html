@@ -16,6 +16,8 @@
       min-height:100vh; overflow:hidden;
       background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
       position:relative;
+      background-size:cover;
+      background-position:center;
     }
 
     /* Desktop Icons */
@@ -29,6 +31,7 @@
     .icon img {
       width: 64px; height: 64px;
       display:block; margin:0 auto;
+      pointer-events:none;
     }
     .icon span {
       display:block;
@@ -37,6 +40,12 @@
       background:rgba(255,255,255,0.4);
       border-radius:4px;
       padding:2px 4px;
+    }
+
+    /* Icon selection highlight */
+    .icon.selected span {
+      background:rgba(200,200,200,0.6);
+      outline:1px solid rgba(150,150,150,0.8);
     }
 
     /* Popup Window */
@@ -74,57 +83,64 @@
     }
     .taskbar button:hover { background:var(--accent2); }
 
-    /* Music Player */
-    .music-player {
-      position:fixed;
-      bottom:40px;
-      right:20px;
-      width:220px;
-      background:var(--glass);
-      border:1px solid var(--border);
-      border-radius:8px;
-      box-shadow:0 4px 10px rgba(0,0,0,.3);
-      padding:10px;
-      z-index:2000;
-      cursor:move;
-    }
-    .music-player h4 {
-      margin:0 0 8px;
-      font-size:14px;
-      text-align:center;
-    }
-    .music-player input[type="file"],
-    .music-player input[type="text"] {
-      width:100%;
-      margin-bottom:8px;
-      font-size:12px;
-    }
-    .music-player audio {
-      width:100%;
-    }
-
     /* Settings Panel */
-    .settings-panel {
+    #settingsPanel {
       position:fixed;
       bottom:40px;
       left:20px;
-      width:200px;
+      width:220px;
       background:var(--glass);
       border:1px solid var(--border);
-      border-radius:8px;
-      box-shadow:0 4px 10px rgba(0,0,0,.3);
+      border-radius:6px;
+      box-shadow:0 6px 18px rgba(0,0,0,.3);
       padding:10px;
       display:none;
-      z-index:1500;
+      z-index:1200;
     }
-    .settings-panel label {
+    #settingsPanel label {
       font-size:12px;
       display:block;
-      margin-top:5px;
+      margin-top:6px;
     }
-    .settings-panel input[type="color"] {
+
+    /* Music Player Windows 10 Style */
+    #musicPlayer {
+      position:fixed;
+      bottom:40px;
+      right:20px;
+      width:280px;
+      background:var(--bar);
+      border:1px solid var(--border);
+      border-radius:6px;
+      box-shadow:0 6px 18px rgba(0,0,0,.3);
+      display:flex;
+      flex-direction:column;
+      z-index:1300;
+    }
+    #musicPlayer .titlebar {
+      background:var(--bar);
+      cursor:move;
+      font-size:13px;
+      padding:6px 8px;
+      border-bottom:1px solid var(--border);
+      font-weight:bold;
+    }
+    #musicPlayer .content {
+      padding:8px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    #musicPlayer input[type="file"],
+    #musicPlayer input[type="text"] {
+      font-size:12px;
       width:100%;
-      height:30px;
+    }
+    #ytFrame {
+      width:100%;
+      height:160px;
+      display:none;
+      border:0;
     }
   </style>
 </head>
@@ -165,24 +181,28 @@
     <div id="clock"></div>
   </div>
 
-  <!-- Music Player -->
-  <div class="music-player" id="musicPlayer">
-    <h4>Music Player</h4>
-    <input type="file" id="mp3Upload" accept="audio/mp3">
-    <input type="text" id="ytLink" placeholder="YouTube URL">
-    <audio id="audioPlayer" controls></audio>
+  <!-- Settings Panel -->
+  <div id="settingsPanel">
+    <label>Text Color:</label>
+    <input type="color" id="textColor" value="#111111">
+    <label>Top Bar Color:</label>
+    <input type="color" id="barColor" value="#f0f0f0">
+    <label>Window Background:</label>
+    <input type="color" id="windowBgColor" value="#ffffff">
+    <label>Custom Wallpaper:</label>
+    <input type="file" id="wallpaperUpload" accept="image/*">
   </div>
 
-  <!-- Settings Panel -->
-  <div class="settings-panel" id="settingsPanel">
-    <label>Text Color</label>
-    <input type="color" id="textColor" value="#111111">
-
-    <label>Top Bar Color</label>
-    <input type="color" id="topBarColor" value="#f0f0f0">
-
-    <label>Window Background</label>
-    <input type="color" id="windowBgColor" value="#ffffff">
+  <!-- Music Player -->
+  <div id="musicPlayer">
+    <div class="titlebar">🎵 Music Player</div>
+    <div class="content">
+      <audio id="audioPlayer" controls style="width:100%"></audio>
+      <input type="file" id="mp3Upload" accept="audio/mp3">
+      <input type="text" id="ytInput" placeholder="YouTube link">
+      <button onclick="loadYouTube()">Play YouTube</button>
+      <iframe id="ytFrame"></iframe>
+    </div>
   </div>
 
   <script>
@@ -234,6 +254,9 @@
     document.querySelectorAll('.icon').forEach(icon=>{
       let dragging=false, dx, dy;
       icon.addEventListener('mousedown', e=>{
+        e.preventDefault(); // Prevent image dragging
+        document.querySelectorAll('.icon').forEach(i=>i.classList.remove('selected'));
+        icon.classList.add('selected');
         dragging=true;
         dx = e.clientX - icon.offsetLeft;
         dy = e.clientY - icon.offsetTop;
@@ -262,48 +285,92 @@
     setInterval(updateClock,1000);
     updateClock();
 
-    // Music Player logic
-    const mp3Upload = document.getElementById('mp3Upload');
-    const audioPlayer = document.getElementById('audioPlayer');
-    mp3Upload.addEventListener('change', e => {
+    // Music Player Logic
+    const audioPlayer = document.getElementById("audioPlayer");
+    const mp3Upload = document.getElementById("mp3Upload");
+    const ytInput = document.getElementById("ytInput");
+    const ytFrame = document.getElementById("ytFrame");
+    const musicPlayer = document.getElementById("musicPlayer");
+    const musicBar = musicPlayer.querySelector(".titlebar");
+
+    mp3Upload.onchange = e=>{
       const file = e.target.files[0];
-      if (file) {
-        audioPlayer.src = URL.createObjectURL(file);
+      if(file){
+        const url = URL.createObjectURL(file);
+        ytFrame.style.display="none";
+        audioPlayer.style.display="block";
+        audioPlayer.src = url;
         audioPlayer.play();
       }
-    });
+    };
 
-    // Movable music player
-    const musicPlayer = document.getElementById('musicPlayer');
-    let isDraggingMusic = false, musicOffsetX, musicOffsetY;
-    musicPlayer.addEventListener('mousedown', e => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'AUDIO') return;
-      isDraggingMusic = true;
-      musicOffsetX = e.clientX - musicPlayer.offsetLeft;
-      musicOffsetY = e.clientY - musicPlayer.offsetTop;
-    });
-    window.addEventListener('mousemove', e => {
-      if (!isDraggingMusic) return;
-      musicPlayer.style.left = (e.clientX - musicOffsetX) + 'px';
-      musicPlayer.style.top = (e.clientY - musicOffsetY) + 'px';
-    });
-    window.addEventListener('mouseup', () => isDraggingMusic = false);
-
-    // Settings Panel logic
-    const settingsPanel = document.getElementById('settingsPanel');
-    function toggleSettings() {
-      settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
+    function loadYouTube(){
+      let url = ytInput.value.trim();
+      if(!url) return;
+      let videoId = "";
+      try {
+        const urlObj = new URL(url);
+        if(urlObj.hostname.includes("youtube.com")){
+          videoId = urlObj.searchParams.get("v");
+        } else if(urlObj.hostname.includes("youtu.be")){
+          videoId = urlObj.pathname.slice(1);
+        }
+      } catch(e){}
+      if(videoId){
+        audioPlayer.pause();
+        audioPlayer.style.display="none";
+        ytFrame.style.display="block";
+        ytFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+      }
     }
 
-    document.getElementById('textColor').addEventListener('input', e => {
-      document.body.style.color = e.target.value;
+    // Dragging music player
+    let draggingMusic=false, mOffsetX=0, mOffsetY=0;
+    musicBar.addEventListener("mousedown", e=>{
+      draggingMusic=true;
+      mOffsetX = e.clientX - musicPlayer.offsetLeft;
+      mOffsetY = e.clientY - musicPlayer.offsetTop;
+      document.body.style.userSelect="none";
     });
-    document.getElementById('topBarColor').addEventListener('input', e => {
+    window.addEventListener("mousemove", e=>{
+      if(!draggingMusic) return;
+      musicPlayer.style.left = (e.clientX - mOffsetX) + "px";
+      musicPlayer.style.top = (e.clientY - mOffsetY) + "px";
+      musicPlayer.style.right = "auto";
+      musicPlayer.style.bottom = "auto";
+    });
+    window.addEventListener("mouseup", ()=>{
+      draggingMusic=false;
+      document.body.style.userSelect="auto";
+    });
+
+    // Settings Logic
+    const settingsPanel = document.getElementById('settingsPanel');
+    function toggleSettings(){
+      settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
+    }
+    document.getElementById('textColor').oninput = e=>{
+      document.documentElement.style.setProperty('--ink', e.target.value);
+    }
+    document.getElementById('barColor').oninput = e=>{
       document.documentElement.style.setProperty('--bar', e.target.value);
-    });
-    document.getElementById('windowBgColor').addEventListener('input', e => {
+    }
+    document.getElementById('windowBgColor').oninput = e=>{
       document.documentElement.style.setProperty('--glass', e.target.value);
-    });
+    }
+
+    // Wallpaper Upload
+    document.getElementById('wallpaperUpload').onchange = e=>{
+      const file = e.target.files[0];
+      if(file){
+        const reader = new FileReader();
+        reader.onload = evt=>{
+          document.body.style.background = `url(${evt.target.result}) no-repeat center center fixed`;
+          document.body.style.backgroundSize = 'cover';
+        };
+        reader.readAsDataURL(file);
+      }
+    };
   </script>
 </body>
 </html>
