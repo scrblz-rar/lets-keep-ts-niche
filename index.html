@@ -8,7 +8,6 @@
     :root{
       --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --accent2:#0078D7;
       --glass:#ffffffcc; --border:#b5b5b5; --bar:#f0f0f0;
-      --steam-bg:#171a21; --steam-panel:#1b2838; --steam-accent:#66c0f4;
     }
     *{box-sizing:border-box}
     html,body{height:100%; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
@@ -17,7 +16,7 @@
       min-height:100vh; overflow:hidden;
       background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
       position:relative;
-      user-select:none;
+      user-select:none; /* prevent text selection when dragging */
     }
 
     /* Desktop Icons */
@@ -61,6 +60,7 @@
       cursor:move; border-bottom:1px solid var(--border);
     }
     .popup iframe{ flex:1; border:0; background:#000; }
+
     .winbtns{ margin-left:auto; display:flex; }
     .winbtn { border:0; background:transparent; cursor:pointer; padding:0 10px; }
     .winbtn:hover { background:var(--accent); color:#fff }
@@ -89,51 +89,13 @@
       cursor: move;
       border-bottom: 1px solid var(--border);
     }
-
-    /* Game Launcher */
-    #gameLauncher {
-      position: fixed;
-      top: 80px; left: 80px;
-      width: 600px; height: 400px;
-      background: var(--steam-panel);
-      border: 2px solid var(--steam-accent);
-      border-radius: 6px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.6);
-      display: none;
-      flex-direction: column;
-      z-index: 1300;
-      color: #fff;
-    }
-    #gameLauncher .titlebar {
-      background: var(--steam-bg);
-      padding: 6px 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: move;
-    }
-    #gameLauncher .content {
-      flex: 1;
-      padding: 10px;
-      overflow-y: auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, 100px);
-      gap: 12px;
-      justify-content: flex-start;
-    }
-    #gameLauncher .game-icon {
-      text-align: center;
+    #musicPlayer .titlebar button {
+      border: none;
+      background: transparent;
       cursor: pointer;
     }
-    #gameLauncher .game-icon img {
-      width: 64px; height: 64px;
-      display:block; margin:0 auto;
-    }
-    #gameLauncher .game-icon span {
-      display:block;
-      margin-top:4px;
-      font-size:12px;
-      color:#fff;
+    #musicPlayer .content {
+      padding: 10px;
     }
 
     /* Taskbar */
@@ -145,38 +107,55 @@
       padding:0 10px; font-size:13px; z-index:1000;
     }
     .taskbar-left { display:flex; gap:6px; align-items:center; }
-    .taskbar-left img { height:24px; width:24px; cursor:pointer; }
+    .taskbar-left img {
+      height:24px; width:24px; cursor:pointer;
+    }
   </style>
 </head>
 <body>
 
   <!-- Desktop Icons -->
   <div class="icon" style="top:50px; left:40px;" data-file="deltarune.html" data-title="Deltarune">
-    <img src="icons/deltarune.png"><span>Deltarune</span>
+    <img src="icons/deltarune.png" alt="Deltarune">
+    <span>Deltarune</span>
   </div>
   <div class="icon" style="top:150px; left:40px;" data-file="undertale.html" data-title="Undertale">
-    <img src="icons/undertale.png"><span>Undertale</span>
+    <img src="icons/undertale.png" alt="Undertale">
+    <span>Undertale</span>
   </div>
   <div class="icon" style="top:250px; left:40px;" data-file="Tanuki Sunset.html" data-title="Tanuki Sunset">
-    <img src="icons/tanuki.png"><span>Tanuki Sunset</span>
+    <img src="icons/tanuki.png" alt="Tanuki Sunset">
+    <span>Tanuki Sunset</span>
   </div>
 
-  <!-- Popup Window -->
-  <div id="popup" class="popup">
-    <div class="titlebar" id="popupTitle">
-      <span id="popupName">Window</span>
-      <div class="winbtns">
-        <button class="winbtn" onclick="toggleFullscreen()">▢</button>
-        <button class="winbtn close" onclick="closeGame()">✕</button>
-      </div>
+ <!-- Popup Window -->
+<div id="popup" class="popup">
+  <div class="titlebar" id="popupTitle">
+    <span id="popupName">Window</span>
+    <div class="winbtns">
+      <button class="winbtn" onclick="toggleFullscreen()">▢</button>
+      <button class="winbtn close" onclick="closeGame()">✕</button>
     </div>
-    <iframe id="gameFrame"></iframe>
   </div>
+  <iframe id="gameFrame"></iframe>
+</div>
+
+<script>
+  function openGame(file, title){
+    // now loads games from the "games" folder
+    frame.src = "https://scrblz-rar.github.io/web-os/games/" + file;
+    popupName.textContent = title;
+    popup.style.display = "flex";
+    popup.style.zIndex = Date.now(); // bring to front
+  }
+</script>
+
 
   <!-- Music Player -->
   <div id="musicPlayer">
     <div class="titlebar" id="musicTitleBar">
-      <span>Music Player</span><button onclick="closeMusicPlayer()">✕</button>
+      <span>Music Player</span>
+      <button onclick="closeMusicPlayer()">✕</button>
     </div>
     <div class="content">
       <input type="file" id="mp3Upload" accept="audio/mp3">
@@ -184,51 +163,37 @@
     </div>
   </div>
 
-  <!-- Game Launcher -->
-  <div id="gameLauncher">
-    <div class="titlebar" id="launcherTitleBar">
-      <span>Game Launcher</span><button onclick="toggleLauncher()">✕</button>
-    </div>
-    <div class="content">
-      <div class="game-icon" data-file="deltarune.html" data-title="Deltarune">
-        <img src="icons/deltarune.png"><span>Deltarune</span>
-      </div>
-      <div class="game-icon" data-file="undertale.html" data-title="Undertale">
-        <img src="icons/undertale.png"><span>Undertale</span>
-      </div>
-      <div class="game-icon" data-file="Tanuki Sunset.html" data-title="Tanuki Sunset">
-        <img src="icons/tanuki.png"><span>Tanuki Sunset</span>
-      </div>
-    </div>
-  </div>
-
   <!-- Taskbar -->
   <div class="taskbar">
     <div class="taskbar-left">
-      <img src="icons/code.png" onclick="openGame('CodeEditor.html','Code Editor')">
-      <img src="icons/paint.png" onclick="openGame('Paint.html','Paint')">
-      <img src="icons/music.png" onclick="toggleMusicPlayer()">
-      <img src="icons/steam.png" onclick="toggleLauncher()" title="Game Launcher">
+      <img src="icons/code.png" alt="Code Editor" onclick="openGame('CodeEditor.html','Code Editor')">
+      <img src="icons/paint.png" alt="Paint" onclick="openGame('Paint.html','Paint')">
+      <img src="icons/music.png" alt="Music Player" onclick="toggleMusicPlayer()">
     </div>
     <div id="clock"></div>
   </div>
 
   <script>
-    const popup=document.getElementById('popup');
-    const frame=document.getElementById('gameFrame');
-    const popupName=document.getElementById('popupName');
-    let isDraggingPopup=false,offsetX,offsetY,isFull=false,prev={};
+    const popup = document.getElementById('popup');
+    const frame = document.getElementById('gameFrame');
+    const popupName = document.getElementById('popupName');
+    let isDraggingPopup = false, offsetX, offsetY;
+    let isFull = false, prev = {};
 
-    function openGame(file,title){
-      frame.src="games/"+file;
-      popupName.textContent=title;
-      popup.style.display="flex";
-      popup.style.zIndex=Date.now();
+    function openGame(file, title){
+      frame.src = "https://scrblz-rar.github.io/web-os/" + file;
+      popupName.textContent = title;
+      popup.style.display = "flex";
+      popup.style.zIndex = Date.now();
     }
-    function closeGame(){ popup.style.display="none"; frame.src=""; isFull=false; }
+    function closeGame(){
+      popup.style.display = "none";
+      frame.src = "";
+      isFull=false;
+    }
     function toggleFullscreen(){
       if(!isFull){
-        prev={left:popup.style.left, top:popup.style.top, width:popup.style.width, height:popup.style.height};
+        prev = {left:popup.style.left, top:popup.style.top, width:popup.style.width, height:popup.style.height};
         popup.style.left="0"; popup.style.top="0"; popup.style.width="100vw"; popup.style.height="100vh";
         isFull=true;
       } else {
@@ -237,77 +202,94 @@
         isFull=false;
       }
     }
-    const bar=document.getElementById('popupTitle');
-    bar.addEventListener('mousedown',e=>{
-      if(isFull)return;
-      isDraggingPopup=true; offsetX=e.clientX-popup.offsetLeft; offsetY=e.clientY-popup.offsetTop; e.preventDefault();
-    });
-    window.addEventListener('mousemove',e=>{
-      if(!isDraggingPopup)return;
-      popup.style.left=(e.clientX-offsetX)+"px"; popup.style.top=(e.clientY-offsetY)+"px";
-    });
-    window.addEventListener('mouseup',()=>isDraggingPopup=false);
 
-    // Music Player
-    const musicPlayer=document.getElementById('musicPlayer');
-    const musicBar=document.getElementById('musicTitleBar');
-    let isDraggingMusic=false,musicOffsetX,musicOffsetY;
-    function toggleMusicPlayer(){ musicPlayer.style.display=musicPlayer.style.display==="flex"?"none":"flex"; }
-    function closeMusicPlayer(){ musicPlayer.style.display="none"; }
-    musicBar.addEventListener('mousedown',e=>{
-      isDraggingMusic=true; musicOffsetX=e.clientX-musicPlayer.offsetLeft; musicOffsetY=e.clientY-musicPlayer.offsetTop; e.preventDefault();
+    // Smooth dragging
+    const bar = document.getElementById('popupTitle');
+    bar.addEventListener('mousedown', e=>{
+      if(isFull) return;
+      isDraggingPopup = true;
+      offsetX = e.clientX - popup.offsetLeft;
+      offsetY = e.clientY - popup.offsetTop;
+      e.preventDefault();
     });
-    window.addEventListener('mousemove',e=>{
-      if(!isDraggingMusic)return;
-      musicPlayer.style.left=(e.clientX-musicOffsetX)+"px"; musicPlayer.style.top=(e.clientY-musicOffsetY)+"px"; musicPlayer.style.position="absolute";
+    window.addEventListener('mousemove', e=>{
+      if(!isDraggingPopup) return;
+      popup.style.left = (e.clientX - offsetX) + "px";
+      popup.style.top = (e.clientY - offsetY) + "px";
     });
-    window.addEventListener('mouseup',()=>isDraggingMusic=false);
+    window.addEventListener('mouseup', ()=> isDraggingPopup=false);
 
-    // Launcher
-    const launcher=document.getElementById('gameLauncher');
-    const launcherBar=document.getElementById('launcherTitleBar');
-    let isDraggingLauncher=false,launcherOffsetX,launcherOffsetY;
-    function toggleLauncher(){ launcher.style.display=launcher.style.display==="flex"?"none":"flex"; }
-    launcherBar.addEventListener('mousedown',e=>{
-      isDraggingLauncher=true; launcherOffsetX=e.clientX-launcher.offsetLeft; launcherOffsetY=e.clientY-launcher.offsetTop; e.preventDefault();
-    });
-    window.addEventListener('mousemove',e=>{
-      if(!isDraggingLauncher)return;
-      launcher.style.left=(e.clientX-launcherOffsetX)+"px"; launcher.style.top=(e.clientY-launcherOffsetY)+"px"; launcher.style.position="absolute";
-    });
-    window.addEventListener('mouseup',()=>isDraggingLauncher=false);
-    document.querySelectorAll('#gameLauncher .game-icon').forEach(g=>{
-      g.addEventListener('click',()=>{
-        openGame(g.dataset.file,g.dataset.title);
-      });
-    });
+    // Music player toggle and drag
+    const musicPlayer = document.getElementById('musicPlayer');
+    const musicBar = document.getElementById('musicTitleBar');
+    let isDraggingMusic = false, musicOffsetX, musicOffsetY;
 
-    // Desktop icons
+    function toggleMusicPlayer(){
+      musicPlayer.style.display = musicPlayer.style.display === 'flex' ? 'none' : 'flex';
+    }
+    function closeMusicPlayer(){
+      musicPlayer.style.display = 'none';
+    }
+
+    musicBar.addEventListener('mousedown', e => {
+      isDraggingMusic = true;
+      musicOffsetX = e.clientX - musicPlayer.offsetLeft;
+      musicOffsetY = e.clientY - musicPlayer.offsetTop;
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', e => {
+      if(!isDraggingMusic) return;
+      musicPlayer.style.left = (e.clientX - musicOffsetX) + 'px';
+      musicPlayer.style.top = (e.clientY - musicOffsetY) + 'px';
+      musicPlayer.style.position = 'absolute';
+    });
+    window.addEventListener('mouseup', ()=> isDraggingMusic = false);
+
+    // Icon behavior: drag and select
     document.querySelectorAll('.icon').forEach(icon=>{
-      let dragging=false,dx,dy;
-      icon.addEventListener('mousedown',e=>{
+      let dragging=false, dx, dy;
+      icon.addEventListener('mousedown', e=>{
         document.querySelectorAll('.icon').forEach(i=>i.classList.remove('selected'));
-        icon.classList.add('selected'); dragging=true; dx=e.clientX-icon.offsetLeft; dy=e.clientY-icon.offsetTop; e.preventDefault();
+        icon.classList.add('selected');
+        dragging=true;
+        dx = e.clientX - icon.offsetLeft;
+        dy = e.clientY - icon.offsetTop;
+        e.preventDefault();
       });
-      window.addEventListener('mousemove',e=>{
-        if(!dragging)return; icon.style.left=(e.clientX-dx)+"px"; icon.style.top=(e.clientY-dy)+"px";
+      window.addEventListener('mousemove', e=>{
+        if(!dragging) return;
+        icon.style.left = (e.clientX - dx)+"px";
+        icon.style.top = (e.clientY - dy)+"px";
       });
-      window.addEventListener('mouseup',()=>dragging=false);
-      icon.addEventListener('dblclick',()=>{ openGame(icon.dataset.file,icon.dataset.title); });
+      window.addEventListener('mouseup', ()=> dragging=false);
+
+      // Double click to open game
+      icon.addEventListener('dblclick', ()=>{
+        const file = icon.dataset.file;
+        const title = icon.dataset.title;
+        openGame(file, title);
+      });
     });
 
-    // MP3 Upload
-    document.getElementById('mp3Upload').addEventListener('change',e=>{
-      const file=e.target.files[0];
-      if(file){ const audio=document.getElementById('audioPlayer'); audio.src=URL.createObjectURL(file); audio.play(); }
+    // MP3 upload
+    document.getElementById('mp3Upload').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if(file){
+        const audio = document.getElementById('audioPlayer');
+        audio.src = URL.createObjectURL(file);
+        audio.play();
+      }
     });
 
     // Clock
-    function updateClock(){
-      const now=new Date();
-      document.getElementById('clock').textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      const date = now.toLocaleDateString();
+      document.getElementById('clock').textContent = ${date} ${time};
     }
-    setInterval(updateClock,1000); updateClock();
+    setInterval(updateClock,1000);
+    updateClock();
   </script>
 </body>
 </html>
