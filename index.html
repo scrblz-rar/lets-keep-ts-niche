@@ -73,6 +73,59 @@
       border-radius:4px; cursor:pointer; font-weight:bold;
     }
     .taskbar button:hover { background:var(--accent2); }
+
+    /* Music Player */
+    .music-player {
+      position:fixed;
+      bottom:40px;
+      right:20px;
+      width:220px;
+      background:var(--glass);
+      border:1px solid var(--border);
+      border-radius:8px;
+      box-shadow:0 4px 10px rgba(0,0,0,.3);
+      padding:10px;
+      z-index:2000;
+      cursor:move;
+    }
+    .music-player h4 {
+      margin:0 0 8px;
+      font-size:14px;
+      text-align:center;
+    }
+    .music-player input[type="file"],
+    .music-player input[type="text"] {
+      width:100%;
+      margin-bottom:8px;
+      font-size:12px;
+    }
+    .music-player audio {
+      width:100%;
+    }
+
+    /* Settings Panel */
+    .settings-panel {
+      position:fixed;
+      bottom:40px;
+      left:20px;
+      width:200px;
+      background:var(--glass);
+      border:1px solid var(--border);
+      border-radius:8px;
+      box-shadow:0 4px 10px rgba(0,0,0,.3);
+      padding:10px;
+      display:none;
+      z-index:1500;
+    }
+    .settings-panel label {
+      font-size:12px;
+      display:block;
+      margin-top:5px;
+    }
+    .settings-panel input[type="color"] {
+      width:100%;
+      height:30px;
+    }
   </style>
 </head>
 <body>
@@ -107,8 +160,29 @@
   <div class="taskbar">
     <div class="taskbar-left">
       <button onclick="openGame('CodeEditor.html','Code Editor')">&lt;/&gt;</button>
+      <button onclick="toggleSettings()">⚙️</button>
     </div>
     <div id="clock"></div>
+  </div>
+
+  <!-- Music Player -->
+  <div class="music-player" id="musicPlayer">
+    <h4>Music Player</h4>
+    <input type="file" id="mp3Upload" accept="audio/mp3">
+    <input type="text" id="ytLink" placeholder="YouTube URL">
+    <audio id="audioPlayer" controls></audio>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="settings-panel" id="settingsPanel">
+    <label>Text Color</label>
+    <input type="color" id="textColor" value="#111111">
+
+    <label>Top Bar Color</label>
+    <input type="color" id="topBarColor" value="#f0f0f0">
+
+    <label>Window Background</label>
+    <input type="color" id="windowBgColor" value="#ffffff">
   </div>
 
   <script>
@@ -122,7 +196,7 @@
       frame.src = "https://scrblz-rar.github.io/web-os/" + file;
       popupName.textContent = title;
       popup.style.display = "flex";
-      popup.style.zIndex = Date.now(); // bring to front
+      popup.style.zIndex = Date.now();
     }
     function closeGame(){
       popup.style.display = "none";
@@ -171,7 +245,6 @@
       });
       window.addEventListener('mouseup', ()=> dragging=false);
 
-      // Double click to open game
       icon.addEventListener('dblclick', ()=>{
         const file = icon.dataset.file;
         const title = icon.dataset.title;
@@ -188,6 +261,49 @@
     }
     setInterval(updateClock,1000);
     updateClock();
+
+    // Music Player logic
+    const mp3Upload = document.getElementById('mp3Upload');
+    const audioPlayer = document.getElementById('audioPlayer');
+    mp3Upload.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) {
+        audioPlayer.src = URL.createObjectURL(file);
+        audioPlayer.play();
+      }
+    });
+
+    // Movable music player
+    const musicPlayer = document.getElementById('musicPlayer');
+    let isDraggingMusic = false, musicOffsetX, musicOffsetY;
+    musicPlayer.addEventListener('mousedown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'AUDIO') return;
+      isDraggingMusic = true;
+      musicOffsetX = e.clientX - musicPlayer.offsetLeft;
+      musicOffsetY = e.clientY - musicPlayer.offsetTop;
+    });
+    window.addEventListener('mousemove', e => {
+      if (!isDraggingMusic) return;
+      musicPlayer.style.left = (e.clientX - musicOffsetX) + 'px';
+      musicPlayer.style.top = (e.clientY - musicOffsetY) + 'px';
+    });
+    window.addEventListener('mouseup', () => isDraggingMusic = false);
+
+    // Settings Panel logic
+    const settingsPanel = document.getElementById('settingsPanel');
+    function toggleSettings() {
+      settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
+    }
+
+    document.getElementById('textColor').addEventListener('input', e => {
+      document.body.style.color = e.target.value;
+    });
+    document.getElementById('topBarColor').addEventListener('input', e => {
+      document.documentElement.style.setProperty('--bar', e.target.value);
+    });
+    document.getElementById('windowBgColor').addEventListener('input', e => {
+      document.documentElement.style.setProperty('--glass', e.target.value);
+    });
   </script>
 </body>
 </html>
