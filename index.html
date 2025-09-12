@@ -17,8 +17,6 @@
       background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
       position:relative;
       user-select:none;
-      background-size: cover;
-      background-position: center;
     }
 
     /* Desktop Icons */
@@ -27,9 +25,12 @@
       text-align: center;
       cursor: pointer;
       position: absolute;
-      color: var(--ink);
     }
-    .icon img { width: 64px; height: 64px; display:block; margin:0 auto; pointer-events: none; }
+    .icon img {
+      width: 64px; height: 64px;
+      display:block; margin:0 auto;
+      pointer-events: none;
+    }
     .icon span {
       display:block;
       margin-top:4px;
@@ -39,7 +40,11 @@
       padding:2px 4px;
       pointer-events: none;
     }
-    .icon.selected { background:rgba(128,128,128,0.4); border-radius:6px; padding:4px 0; }
+    .icon.selected {
+      background:rgba(128,128,128,0.4);
+      border-radius:6px;
+      padding:4px 0;
+    }
 
     /* Popup Window */
     .popup {
@@ -75,33 +80,23 @@
       flex-direction: column;
       z-index: 1200;
     }
-    #musicPlayer .titlebar { background: var(--bar); padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; cursor: move; border-bottom: 1px solid var(--border); }
-    #musicPlayer .titlebar button { border: none; background: transparent; cursor: pointer; }
-    #musicPlayer .content { padding: 10px; }
-
-    /* Customization Panel */
-    #customPanel {
-      position: fixed;
-      bottom: 40px;
-      left: 20px;
-      width: 320px;
-      background: var(--glass);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      display: none;
-      flex-direction: column;
-      z-index: 1200;
+    #musicPlayer .titlebar {
+      background: var(--bar);
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: move;
+      border-bottom: 1px solid var(--border);
+    }
+    #musicPlayer .titlebar button {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    #musicPlayer .content {
       padding: 10px;
     }
-    #customPanel h3 { margin: 0 0 10px 0; font-size: 16px; }
-    #customPanel input[type="color"],
-    #customPanel input[type="file"],
-    #customPanel select {
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    #customPanel button { width: 100%; padding: 6px; border: none; background: var(--accent); color: #fff; border-radius: 4px; cursor: pointer; }
 
     /* Taskbar */
     .taskbar {
@@ -112,7 +107,9 @@
       padding:0 10px; font-size:13px; z-index:1000;
     }
     .taskbar-left { display:flex; gap:6px; align-items:center; }
-    .taskbar-left img { height:24px; width:24px; cursor:pointer; }
+    .taskbar-left img {
+      height:24px; width:24px; cursor:pointer;
+    }
   </style>
 </head>
 <body>
@@ -142,7 +139,7 @@
     <img src="icons/drift.png" alt="Drift Hunters">
     <span>Drift Hunters</span>
   </div>
-  <div class="icon" style="top:660px; left:40px;" data-file="Sort the Court.html" data-title="Sort The Court">
+   <div class="icon" style="top:660px; left:40px;" data-file="Sort the Court.html" data-title="Sort The Court">
     <img src="icons/sort-the-court.png" alt="Sort The Court">
     <span>Sort the Court</span>
   </div>
@@ -150,6 +147,7 @@
     <img src="icons/nexus.png" alt="Madness Combat: Project Nexus">
     <span>Madness Combat: Project Nexus</span>
   </div>
+
 
   <!-- Popup Window -->
   <div id="popup" class="popup">
@@ -175,34 +173,11 @@
     </div>
   </div>
 
-  <!-- Customization Panel -->
-  <div id="customPanel">
-    <h3>Customize</h3>
-    <label>Choose Wallpaper:</label>
-    <select id="presetWallpaper">
-      <option value="">Default</option>
-      <option value="https://picsum.photos/1920/1080?1">Abstract</option>
-      <option value="https://picsum.photos/1920/1080?2">Mountains</option>
-      <option value="https://picsum.photos/1920/1080?3">Ocean</option>
-    </select>
-
-    <label>Upload Custom Wallpaper:</label>
-    <input type="file" id="customWallpaperUpload" accept="image/*">
-
-    <label>Top Bar Color:</label>
-    <input type="color" id="topBarColor" value="#f0f0f0">
-
-    <label>Text Color:</label>
-    <input type="color" id="textColor" value="#111111">
-
-    <button onclick="applyCustomizations()">Apply</button>
-  </div>
-
   <!-- Taskbar -->
   <div class="taskbar">
     <div class="taskbar-left">
       <img src="icons/code.png" alt="Code Editor" onclick="openApp('CodeEditor.html','Code Editor')">
-      <img src="icons/paint.png" alt="Customization" onclick="toggleCustomPanel()">
+      <img src="icons/paint.png" alt="Paint" onclick="openApp('Paint.html','Paint')">
       <img src="icons/music.png" alt="Music Player" onclick="toggleMusicPlayer()">
     </div>
     <div id="clock"></div>
@@ -215,19 +190,21 @@
     let isDraggingPopup = false, offsetX, offsetY;
     let isFull = false, prev = {};
 
-    // Open desktop games
+    // Open desktop games (in /games)
     function openGame(file, title){
       frame.src = "https://scrblz-rar.github.io/web-os/games/" + file;
       popupName.textContent = title;
       popup.style.display = "flex";
       popup.style.zIndex = Date.now();
     }
+    // Open apps (root directory)
     function openApp(file, title){
       frame.src = "https://scrblz-rar.github.io/web-os/" + file;
       popupName.textContent = title;
       popup.style.display = "flex";
       popup.style.zIndex = Date.now();
     }
+
     function closeGame(){
       popup.style.display = "none";
       frame.src = "";
@@ -261,7 +238,7 @@
     });
     window.addEventListener('mouseup', ()=> isDraggingPopup=false);
 
-    // Music Player Toggle
+    // Music player toggle + drag
     const musicPlayer = document.getElementById('musicPlayer');
     const musicBar = document.getElementById('musicTitleBar');
     let isDraggingMusic = false, musicOffsetX, musicOffsetY;
@@ -269,8 +246,9 @@
     function toggleMusicPlayer(){
       musicPlayer.style.display = musicPlayer.style.display === 'flex' ? 'none' : 'flex';
     }
-    function closeMusicPlayer(){ musicPlayer.style.display = 'none'; }
-
+    function closeMusicPlayer(){
+      musicPlayer.style.display = 'none';
+    }
     musicBar.addEventListener('mousedown', e => {
       isDraggingMusic = true;
       musicOffsetX = e.clientX - musicPlayer.offsetLeft;
@@ -285,38 +263,29 @@
     });
     window.addEventListener('mouseup', ()=> isDraggingMusic = false);
 
-    // Customization Panel Toggle
-    const customPanel = document.getElementById('customPanel');
-    function toggleCustomPanel(){
-      customPanel.style.display = customPanel.style.display === 'flex' ? 'none' : 'flex';
-    }
+    // Icon drag + double click
+    document.querySelectorAll('.icon').forEach(icon=>{
+      let dragging=false, dx, dy;
+      icon.addEventListener('mousedown', e=>{
+        document.querySelectorAll('.icon').forEach(i=>i.classList.remove('selected'));
+        icon.classList.add('selected');
+        dragging=true;
+        dx = e.clientX - icon.offsetLeft;
+        dy = e.clientY - icon.offsetTop;
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', e=>{
+        if(!dragging) return;
+        icon.style.left = (e.clientX - dx)+"px";
+        icon.style.top = (e.clientY - dy)+"px";
+      });
+      window.addEventListener('mouseup', ()=> dragging=false);
 
-    // Apply customizations
-    function applyCustomizations(){
-      const wallpaper = document.getElementById('presetWallpaper').value;
-      const topBarColor = document.getElementById('topBarColor').value;
-      const textColor = document.getElementById('textColor').value;
-
-      // Update top bar color and text color
-      document.documentElement.style.setProperty('--bar', topBarColor);
-      document.documentElement.style.setProperty('--ink', textColor);
-
-      // Update wallpaper from preset
-      if(wallpaper){
-        document.body.style.backgroundImage = `url(${wallpaper})`;
-      }
-    }
-
-    // Handle custom wallpaper upload
-    document.getElementById('customWallpaperUpload').addEventListener('change', e => {
-      const file = e.target.files[0];
-      if(file){
-        const reader = new FileReader();
-        reader.onload = function(event){
-          document.body.style.backgroundImage = `url(${event.target.result})`;
-        }
-        reader.readAsDataURL(file);
-      }
+      icon.addEventListener('dblclick', ()=>{
+        const file = icon.dataset.file;
+        const title = icon.dataset.title;
+        openGame(file, title);
+      });
     });
 
     // MP3 upload
