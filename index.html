@@ -1,123 +1,575 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Custom Wallpaper Desktop</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>web-os</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background: url('default.jpg') no-repeat center center fixed;
-      background-size: cover;
-      font-family: sans-serif;
+    :root{
+      --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --accent2:#0078D7;
+      --glass:#ffffffcc; --border:#b5b5b5; --bar:#f0f0f0;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+    body{
+      color:var(--ink);
+      min-height:100vh; overflow:hidden;
+      /* default desktop pattern */
+      background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
+      position:relative;
+      user-select:none;
+      background-size:cover;
+      background-position:center;
     }
 
-    .taskbar {
-      height: 40px;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 0 10px;
-      position: relative;
+    /* Desktop Icons */
+    .icon {
+      width: 80px;
+      text-align: center;
+      cursor: pointer;
+      position: absolute;
+    }
+    .icon img {
+      width: 64px; height: 64px;
+      display:block; margin:0 auto;
+      pointer-events: none;
+    }
+    .icon span {
+      display:block;
+      margin-top:4px;
+      font-size:12px;
+      background:rgba(255,255,255,0.4);
+      border-radius:4px;
+      padding:2px 4px;
+      pointer-events: none;
+    }
+    .icon.selected {
+      background:rgba(128,128,128,0.4);
+      border-radius:6px;
+      padding:4px 0;
     }
 
+    /* Popup Window */
     .popup {
-      position: absolute;
-      bottom: 45px;
-      left: 10px;
-      background: rgba(0,0,0,0.8);
-      color: white;
-      padding: 6px 10px;
+      position:absolute; top:100px; left:100px;
+      width:800px; height:500px;
+      background:var(--glass); border:1px solid var(--border); border-radius:6px;
+      box-shadow:0 12px 28px rgba(0,0,0,.35);
+      display:none; flex-direction:column; overflow:hidden;
+      z-index:999; resize:both;
+    }
+    .popup .titlebar{
+      background:var(--bar); padding:6px 10px; display:flex; align-items:center;
+      cursor:move; border-bottom:1px solid var(--border);
+    }
+    .popup iframe{ flex:1; border:0; background:#000; }
+
+    .winbtns{ margin-left:auto; display:flex; }
+    .winbtn { border:0; background:transparent; cursor:pointer; padding:0 10px; }
+    .winbtn:hover { background:var(--accent); color:#fff }
+    .winbtn.close:hover { background:#e81123; color:#fff }
+
+    /* Music Player */
+    #musicPlayer {
+      position: fixed;
+      bottom: 40px;
+      right: 20px;
+      width: 300px;
+      background: var(--glass);
+      border: 1px solid var(--border);
       border-radius: 6px;
-      font-size: 14px;
-      animation: fadeIn 0.5s;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .controls {
-      position: absolute;
-      bottom: 50px;
-      left: 10px;
-      background: rgba(0,0,0,0.85);
-      padding: 10px;
-      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       display: none;
       flex-direction: column;
-      gap: 6px;
+      z-index: 1200;
+    }
+    #musicPlayer .titlebar {
+      background: var(--bar);
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: move;
+      border-bottom: 1px solid var(--border);
+    }
+    #musicPlayer .titlebar button {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    #musicPlayer .content {
+      padding: 10px;
     }
 
-    .controls label {
-      color: white;
-      font-size: 14px;
+    /* Taskbar */
+    .taskbar {
+      position:fixed; bottom:0; left:0; right:0;
+      height:32px; background:var(--bar);
+      border-top:1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center;
+      padding:0 10px; font-size:13px; z-index:1000;
+    }
+    .taskbar-left { display:flex; gap:6px; align-items:center; position:relative; }
+    .taskbar-left img {
+      height:24px; width:24px; cursor:pointer;
     }
 
-    .controls select,
-    .controls input {
-      margin-top: 4px;
+    /* Wallpaper Panel (replaces previous settings panel content) */
+    #wallpaperPanel {
+      position: absolute;
+      bottom: 50px;
+      left: 20px;
+      width: 300px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: none;
+      padding: 10px;
+      z-index:1500;
+      gap:8px;
+      display:flex;
+      flex-direction:row;
+      align-items:center;
+    }
+    #wallpaperPreview {
+      width: 120px;
+      height: 80px;
+      border-radius:6px;
+      border:1px solid rgba(0,0,0,0.12);
+      background-repeat:no-repeat;
+      background-position:center;
+      background-size:cover;
+      cursor: pointer;
+      flex-shrink:0;
+    }
+    /* small tip inside the panel */
+    #panelTip {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background: rgba(255,255,255,0.9);
+      color:#000;
+      padding:6px 8px;
+      border-radius:6px;
+      font-size:13px;
+      margin-left:8px;
+      max-width:150px;
+    }
+    #panelTip button { background:transparent; border:none; cursor:pointer; font-weight:bold; }
+
+    /* hidden tiny controls that open when preview clicked */
+    #wallpaperControls {
+      position: absolute;
+      bottom: 140px;
+      left: 20px;
+      width: 300px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+      padding: 10px;
+      display: none;
+      z-index:1600;
+      flex-direction:column;
+      gap:8px;
+    }
+    #wallpaperControls label { font-size:13px; display:block; }
+    #wallpaperControls select, #wallpaperControls input[type="file"] { width:100%; margin-top:6px; }
+
+    /* small persistent hint near the taskbar (positioned dynamically) */
+    #wallpaperHint {
+      position: absolute;
+      bottom: 44px; /* near the taskbar */
+      left: 100px;  /* will be repositioned on load to sit above settings icon */
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding:6px 10px;
+      border-radius:6px;
+      font-size:13px;
+      z-index:1400;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    /* Responsive safety */
+    @media (max-width:420px){
+      #wallpaperPanel { left:8px; width:86%; }
+      #wallpaperControls { left:8px; width:86%; }
     }
   </style>
 </head>
 <body>
-  <div class="taskbar">
-    <button id="wallpaperBtn">🖼️ Wallpaper</button>
-    <div class="popup">Change wallpaper here!</div>
+
+  <!-- Desktop Icons (all restored) -->
+  <div class="icon" style="top:50px; left:40px;" data-file="deltarune.html" data-title="Deltarune">
+    <img src="icons/deltarune.png" alt="Deltarune">
+    <span>Deltarune</span>
+  </div>
+  <div class="icon" style="top:150px; left:40px;" data-file="undertale.html" data-title="Undertale">
+    <img src="icons/undertale.png" alt="Undertale">
+    <span>Undertale</span>
+  </div>
+  <div class="icon" style="top:250px; left:40px;" data-file="Tanuki Sunset.html" data-title="Tanuki Sunset">
+    <img src="icons/tanuki.png" alt="Tanuki Sunset">
+    <span>Tanuki Sunset</span>
+  </div>
+  <div class="icon" style="top:350px; left:40px;" data-file="Hollow Knight.html" data-title="Hollow Knight">
+    <img src="icons/hollow.png" alt="Hollow Knight">
+    <span>Hollow Knight</span>
+  </div>
+  <div class="icon" style="top:460px; left:40px;" data-file="pizzatower.html" data-title="Pizza Tower">
+    <img src="icons/pizza.png" alt="Pizza Tower">
+    <span>Pizza Tower</span>
+  </div>
+  <div class="icon" style="top:560px; left:40px;" data-file="drift.html" data-title="Drift Hunters">
+    <img src="icons/drift.png" alt="Drift Hunters">
+    <span>Drift Hunters</span>
+  </div>
+   <div class="icon" style="top:160px; left:150px;" data-file="Sort the Court.html" data-title="Sort The Court">
+    <img src="icons/sort-the-court.png" alt="Sort The Court">
+    <span>Sort the Court</span>
+  </div>
+  <div class="icon" style="top:50px; left:150px;" data-file="Madness.html" data-title="Project Nexus">
+    <img src="icons/nexus.png" alt="Project Nexus">
+    <span>Project Nexus</span>
   </div>
 
-  <div class="controls" id="controls">
-    <label>
-      Choose Preset:
+  <!-- Popup Window -->
+  <div id="popup" class="popup">
+    <div class="titlebar" id="popupTitle">
+      <span id="popupName">Window</span>
+      <div class="winbtns">
+        <button class="winbtn" onclick="toggleFullscreen()">▢</button>
+        <button class="winbtn close" onclick="closeGame()">✕</button>
+      </div>
+    </div>
+    <iframe id="gameFrame"></iframe>
+  </div>
+
+  <!-- Music Player -->
+  <div id="musicPlayer">
+    <div class="titlebar" id="musicTitleBar">
+      <span>Music Player</span>
+      <button onclick="closeMusicPlayer()">✕</button>
+    </div>
+    <div class="content">
+      <input type="file" id="mp3Upload" accept="audio/mp3">
+      <audio id="audioPlayer" controls style="width:100%; margin-top:8px;"></audio>
+    </div>
+  </div>
+
+  <!-- Wallpaper Panel (minimal preview + closable tip) -->
+  <div id="wallpaperPanel" aria-hidden="true">
+    <div id="wallpaperPreview" title="Click to change wallpaper"></div>
+
+    <div id="panelTip">
+      <span>⬅ change wallpaper here</span>
+      <button id="closePanelTip" aria-label="Close tip">✕</button>
+    </div>
+  </div>
+
+  <!-- Hidden wallpaper controls (open when clicking preview) -->
+  <div id="wallpaperControls" aria-hidden="true">
+    <label>Choose Preset:
       <select id="presetSelect">
-        <option value="default.jpg">Default</option>
-        <option value="forest.jpg">Forest</option>
-        <option value="mountain.jpg">Mountain</option>
-        <option value="city.jpg">City</option>
+        <!-- put your preset image paths - these are placeholders -->
+        <option value="">(none)</option>
+        <option value="wallpapers/preset1.jpg">Preset 1</option>
+        <option value="wallpapers/preset2.jpg">Preset 2</option>
+        <option value="wallpapers/preset3.jpg">Preset 3</option>
       </select>
     </label>
 
-    <label>
-      Or Upload:
-      <input type="file" id="fileInput" accept="image/*">
+    <label>Upload Image:
+      <input type="file" id="wallpaperUpload" accept="image/*">
     </label>
+    <button id="closeWallpaperControls">Done</button>
+  </div>
+
+  <!-- small persistent hint near the taskbar (positioned above settings icon) -->
+  <div id="wallpaperHint">change wallpaper here!</div>
+
+  <!-- Taskbar -->
+  <div class="taskbar">
+    <div class="taskbar-left" id="taskbarLeft">
+      <img src="icons/code.png" alt="Code Editor" onclick="openApp('CodeEditor.html','Code Editor')">
+      <img src="icons/paint.png" alt="Paint" onclick="openApp('Paint.html','Paint')">
+      <img src="icons/music.png" alt="Music Player" onclick="toggleMusicPlayer()">
+      <!-- Settings icon now toggles wallpaper panel -->
+      <img src="icons/settings.png" alt="Settings" id="settingsBtn" onclick="toggleWallpaperPanel()">
+    </div>
+    <div id="clock"></div>
   </div>
 
   <script>
-    const wallpaperBtn = document.getElementById("wallpaperBtn");
-    const controls = document.getElementById("controls");
-    const presetSelect = document.getElementById("presetSelect");
-    const fileInput = document.getElementById("fileInput");
+    /* ---------- core popup / apps (kept exactly as original) ---------- */
+    const popup = document.getElementById('popup');
+    const frame = document.getElementById('gameFrame');
+    const popupName = document.getElementById('popupName');
+    let isDraggingPopup = false, offsetX, offsetY;
+    let isFull = false, prev = {};
 
-    // Toggle wallpaper controls
-    wallpaperBtn.addEventListener("click", () => {
-      controls.style.display = controls.style.display === "flex" ? "none" : "flex";
+    // Open desktop games (in /games)
+    function openGame(file, title){
+      frame.src = "https://scrblz-rar.github.io/web-os/games/" + file;
+      popupName.textContent = title;
+      popup.style.display = "flex";
+      popup.style.zIndex = Date.now();
+    }
+    // Open apps (root directory)
+    function openApp(file, title){
+      frame.src = "https://scrblz-rar.github.io/web-os/" + file;
+      popupName.textContent = title;
+      popup.style.display = "flex";
+      popup.style.zIndex = Date.now();
+    }
+
+    function closeGame(){
+      popup.style.display = "none";
+      frame.src = "";
+      isFull=false;
+    }
+    function toggleFullscreen(){
+      if(!isFull){
+        prev = {left:popup.style.left, top:popup.style.top, width:popup.style.width, height:popup.style.height};
+        popup.style.left="0"; popup.style.top="0"; popup.style.width="100vw"; popup.style.height="100vh";
+        isFull=true;
+      } else {
+        popup.style.left=prev.left||"100px"; popup.style.top=prev.top||"100px";
+        popup.style.width=prev.width||"800px"; popup.style.height=prev.height||"500px";
+        isFull=false;
+      }
+    }
+
+    // Dragging popup
+    const bar = document.getElementById('popupTitle');
+    bar.addEventListener('mousedown', e=>{
+      if(isFull) return;
+      isDraggingPopup = true;
+      offsetX = e.clientX - popup.offsetLeft;
+      offsetY = e.clientY - popup.offsetTop;
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', e=>{
+      if(!isDraggingPopup) return;
+      popup.style.left = (e.clientX - offsetX) + "px";
+      popup.style.top = (e.clientY - offsetY) + "px";
+    });
+    window.addEventListener('mouseup', ()=> isDraggingPopup=false);
+
+    /* ---------- music player toggle + drag (fixed stretch) ---------- */
+    const musicPlayer = document.getElementById('musicPlayer');
+    const musicBar = document.getElementById('musicTitleBar');
+    let isDraggingMusic = false, musicOffsetX, musicOffsetY;
+
+    function toggleMusicPlayer(){
+      // toggle visibility, preserve previous absolute position if it exists
+      if (musicPlayer.style.display === 'flex') {
+        musicPlayer.style.display = 'none';
+      } else {
+        musicPlayer.style.display = 'flex';
+        // if the player already has left/top (user moved it), keep absolute positioning
+        if (musicPlayer.style.left || musicPlayer.style.top) {
+          musicPlayer.style.position = 'absolute';
+          musicPlayer.style.right = 'auto';
+          musicPlayer.style.bottom = 'auto';
+        } else {
+          // default anchored position (bottom-right)
+          musicPlayer.style.position = 'fixed';
+          musicPlayer.style.right = '20px';
+          musicPlayer.style.bottom = '40px';
+          musicPlayer.style.left = '';
+          musicPlayer.style.top = '';
+        }
+      }
+    }
+    function closeMusicPlayer(){
+      musicPlayer.style.display = 'none';
+    }
+
+    musicBar.addEventListener('mousedown', e => {
+      // begin dragging - switch to absolute and remove right/bottom to avoid stretching
+      isDraggingMusic = true;
+
+      // compute offsets using bounding rect for more accurate positioning
+      const rect = musicPlayer.getBoundingClientRect();
+      musicOffsetX = e.clientX - rect.left;
+      musicOffsetY = e.clientY - rect.top;
+
+      // ensure it becomes absolute and remove right/bottom anchors so width doesn't stretch
+      musicPlayer.style.position = 'absolute';
+      musicPlayer.style.left = rect.left + 'px';
+      musicPlayer.style.top = rect.top + 'px';
+      musicPlayer.style.right = 'auto';
+      musicPlayer.style.bottom = 'auto';
+
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', e => {
+      if(!isDraggingMusic) return;
+      // Only update left/top so width remains fixed
+      musicPlayer.style.left = (e.clientX - musicOffsetX) + 'px';
+      musicPlayer.style.top = (e.clientY - musicOffsetY) + 'px';
+    });
+    window.addEventListener('mouseup', ()=> isDraggingMusic = false);
+
+    /* ---------- Icon drag + double click ---------- */
+    document.querySelectorAll('.icon').forEach(icon=>{
+      let dragging=false, dx, dy;
+      icon.addEventListener('mousedown', e=>{
+        document.querySelectorAll('.icon').forEach(i=>i.classList.remove('selected'));
+        icon.classList.add('selected');
+        dragging=true;
+        dx = e.clientX - icon.offsetLeft;
+        dy = e.clientY - icon.offsetTop;
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', e=>{
+        if(!dragging) return;
+        icon.style.left = (e.clientX - dx)+"px";
+        icon.style.top = (e.clientY - dy)+"px";
+      });
+      window.addEventListener('mouseup', ()=> dragging=false);
+
+      icon.addEventListener('dblclick', ()=>{
+        const file = icon.dataset.file;
+        const title = icon.dataset.title;
+        openGame(file, title);
+      });
     });
 
-    // Preset wallpaper change
-    presetSelect.addEventListener("change", (e) => {
-      document.body.style.background = `url('${e.target.value}') no-repeat center center fixed`;
-      document.body.style.backgroundSize = "cover";
-    });
-
-    // Custom upload wallpaper
-    fileInput.addEventListener("change", (e) => {
+    /* ---------- MP3 upload ---------- */
+    document.getElementById('mp3Upload').addEventListener('change', e => {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          document.body.style.background = `url('${event.target.result}') no-repeat center center fixed`;
-          document.body.style.backgroundSize = "cover";
-        };
-        reader.readAsDataURL(file);
+      if(file){
+        const audio = document.getElementById('audioPlayer');
+        audio.src = URL.createObjectURL(file);
+        audio.play();
       }
     });
+
+    /* ---------- Wallpaper panel & controls ---------- */
+    const wallpaperPanel = document.getElementById('wallpaperPanel');
+    const wallpaperPreview = document.getElementById('wallpaperPreview');
+    const wallpaperControls = document.getElementById('wallpaperControls');
+    const presetSelect = document.getElementById('presetSelect');
+    const wallpaperUpload = document.getElementById('wallpaperUpload');
+    const closeWallpaperControls = document.getElementById('closeWallpaperControls');
+    const panelTip = document.getElementById('panelTip');
+    const closePanelTip = document.getElementById('closePanelTip');
+    const wallpaperHint = document.getElementById('wallpaperHint');
+    const settingsBtn = document.getElementById('settingsBtn');
+
+    // Toggle panel visibility (Settings icon)
+    function toggleWallpaperPanel(){
+      if (wallpaperPanel.style.display === 'flex') {
+        wallpaperPanel.style.display = 'none';
+        wallpaperControls.style.display = 'none';
+      } else {
+        wallpaperPanel.style.display = 'flex';
+        // position preview background from current body background
+        syncPreviewWithBody();
+      }
+    }
+
+    // click preview to show full hidden controls
+    wallpaperPreview.addEventListener('click', () => {
+      wallpaperControls.style.display = wallpaperControls.style.display === 'flex' ? 'none' : 'flex';
+      // show a quick preview sync
+      syncPreviewWithBody();
+    });
+
+    // preset selection
+    presetSelect.addEventListener('change', e => {
+      const val = e.target.value;
+      if (!val) return;
+      applyWallpaperUrl(val);
+    });
+
+    // upload file
+    wallpaperUpload.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        applyWallpaperUrl(ev.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    closeWallpaperControls.addEventListener('click', () => {
+      wallpaperControls.style.display = 'none';
+    });
+
+    // panel tip close button
+    closePanelTip.addEventListener('click', () => {
+      panelTip.style.display = 'none';
+    });
+
+    // wallpaper hint click opens panel
+    wallpaperHint.addEventListener('click', () => {
+      toggleWallpaperPanel();
+    });
+
+    function applyWallpaperUrl(url){
+      document.body.style.backgroundImage = `url('${url}')`;
+      document.body.style.backgroundRepeat = 'no-repeat';
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundPosition = 'center';
+      // reflect in preview
+      wallpaperPreview.style.backgroundImage = `url('${url}')`;
+      // auto-close controls for neatness
+      wallpaperControls.style.display = 'none';
+    }
+
+    // If body has no image (default pattern), show pattern in preview
+    function syncPreviewWithBody(){
+      const bg = window.getComputedStyle(document.body).backgroundImage;
+      if (bg && bg !== 'none' && !bg.includes('repeating-conic-gradient')) {
+        // set preview background
+        wallpaperPreview.style.backgroundImage = bg;
+      } else {
+        // show the default repeating pattern inside preview (approx)
+        wallpaperPreview.style.backgroundImage = "repeating-conic-gradient(#e0e0e0 0% 25%, rgba(0,0,0,0) 0% 50%)";
+        wallpaperPreview.style.backgroundSize = '40px 40px';
+      }
+    }
+
+    // position wallpaperHint above the settings icon (run on load & resize)
+    function positionHint(){
+      const settingsRect = settingsBtn.getBoundingClientRect();
+      const hint = wallpaperHint;
+      const hintWidth = hint.offsetWidth || 140;
+      // center the hint above the settings icon
+      let left = settingsRect.left + (settingsRect.width / 2) - (hintWidth / 2);
+      // constrain left so it doesn't go off-screen
+      left = Math.max(8, Math.min(left, window.innerWidth - hintWidth - 8));
+      hint.style.left = left + 'px';
+      // bottom set to match taskbar height
+      hint.style.bottom = (window.innerHeight - settingsRect.top + 6) * -1; // we override below for stable placement
+      // simpler: set bottom to 44px (just above taskbar)
+      hint.style.bottom = '44px';
+    }
+
+    window.addEventListener('resize', positionHint);
+    window.addEventListener('load', () => {
+      positionHint();
+      // initial preview sync
+      syncPreviewWithBody();
+    });
+
+    /* ---------- Clock ---------- */
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      const date = now.toLocaleDateString();
+      document.getElementById('clock').textContent = `${date} ${time}`;
+    }
+    setInterval(updateClock,1000);
+    updateClock();
+
+    /* EOF */
   </script>
 </body>
 </html>
