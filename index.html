@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>web-os</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>web-os (with wallpaper panel)</title>
   <style>
     :root{
       --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --accent2:#0078D7;
@@ -14,7 +14,7 @@
     body{
       color:var(--ink);
       min-height:100vh; overflow:hidden;
-      /* default desktop pattern */
+      /* default desktop pattern (fake transparent look is used for panels) */
       background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
       position:relative;
       user-select:none;
@@ -23,31 +23,13 @@
     }
 
     /* Desktop Icons */
-    .icon {
-      width: 80px;
-      text-align: center;
-      cursor: pointer;
-      position: absolute;
-    }
-    .icon img {
-      width: 64px; height: 64px;
-      display:block; margin:0 auto;
-      pointer-events: none;
-    }
+    .icon { width:80px; text-align:center; cursor:pointer; position:absolute; }
+    .icon img { width:64px; height:64px; display:block; margin:0 auto; pointer-events:none; }
     .icon span {
-      display:block;
-      margin-top:4px;
-      font-size:12px;
-      background:rgba(255,255,255,0.4);
-      border-radius:4px;
-      padding:2px 4px;
-      pointer-events: none;
+      display:block; margin-top:4px; font-size:12px;
+      background:rgba(255,255,255,0.4); border-radius:4px; padding:2px 4px; pointer-events:none;
     }
-    .icon.selected {
-      background:rgba(128,128,128,0.4);
-      border-radius:6px;
-      padding:4px 0;
-    }
+    .icon.selected { background:rgba(128,128,128,0.4); border-radius:6px; padding:4px 0; }
 
     /* Popup Window */
     .popup {
@@ -63,7 +45,6 @@
       cursor:move; border-bottom:1px solid var(--border);
     }
     .popup iframe{ flex:1; border:0; background:#000; }
-
     .winbtns{ margin-left:auto; display:flex; }
     .winbtn { border:0; background:transparent; cursor:pointer; padding:0 10px; }
     .winbtn:hover { background:var(--accent); color:#fff }
@@ -92,14 +73,8 @@
       cursor: move;
       border-bottom: 1px solid var(--border);
     }
-    #musicPlayer .titlebar button {
-      border: none;
-      background: transparent;
-      cursor: pointer;
-    }
-    #musicPlayer .content {
-      padding: 10px;
-    }
+    #musicPlayer .titlebar button { border: none; background: transparent; cursor: pointer; }
+    #musicPlayer .content { padding: 10px; }
 
     /* Taskbar */
     .taskbar {
@@ -110,63 +85,62 @@
       padding:0 10px; font-size:13px; z-index:1000;
     }
     .taskbar-left { display:flex; gap:6px; align-items:center; position:relative; }
-    .taskbar-left img {
-      height:24px; width:24px; cursor:pointer;
-    }
+    .taskbar-left img { height:24px; width:24px; cursor:pointer; }
 
-    /* Wallpaper Panel (replaces previous settings panel content) */
+    /* Wallpaper Panel (minimal glass preview + tip) */
     #wallpaperPanel {
       position: absolute;
       bottom: 50px;
       left: 20px;
-      width: 300px;
-      background: var(--glass);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      width: 320px;
+      background: rgba(30,30,30,0.55); /* fake transparent */
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 10px;
       display: none;
       padding: 10px;
       z-index:1500;
-      gap:8px;
+      gap:10px;
+      align-items:center;
+      box-shadow:0 6px 18px rgba(0,0,0,0.25);
+      color: #fff;
       display:flex;
       flex-direction:row;
-      align-items:center;
     }
     #wallpaperPreview {
-      width: 120px;
-      height: 80px;
-      border-radius:6px;
-      border:1px solid rgba(0,0,0,0.12);
+      width: 140px;
+      height: 90px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.12);
       background-repeat:no-repeat;
       background-position:center;
       background-size:cover;
-      cursor: pointer;
+      cursor:pointer;
       flex-shrink:0;
     }
-    /* small tip inside the panel */
     #panelTip {
       display:flex;
       align-items:center;
       justify-content:space-between;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.92);
       color:#000;
       padding:6px 8px;
-      border-radius:6px;
+      border-radius:8px;
       font-size:13px;
-      margin-left:8px;
+      margin-left:12px;
       max-width:150px;
     }
     #panelTip button { background:transparent; border:none; cursor:pointer; font-weight:bold; }
 
-    /* hidden tiny controls that open when preview clicked */
+    /* Hidden Controls (appear when clicking preview) */
     #wallpaperControls {
       position: absolute;
-      bottom: 140px;
+      bottom: 160px;
       left: 20px;
-      width: 300px;
+      width: 320px;
       background: var(--glass);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       box-shadow: 0 6px 18px rgba(0,0,0,0.25);
       padding: 10px;
       display: none;
@@ -174,15 +148,16 @@
       flex-direction:column;
       gap:8px;
     }
-    #wallpaperControls label { font-size:13px; display:block; }
-    #wallpaperControls select, #wallpaperControls input[type="file"] { width:100%; margin-top:6px; }
+    #wallpaperControls label { font-size:13px; display:block; color:var(--ink); }
+    #wallpaperControls select, #wallpaperControls input[type="file"]{ width:100%; margin-top:6px; }
+    #wallpaperControls .controls-row { display:flex; gap:8px; align-items:center; }
 
-    /* small persistent hint near the taskbar (positioned dynamically) */
+    /* Hint above settings icon (one-time) */
     #wallpaperHint {
       position: absolute;
-      bottom: 44px; /* near the taskbar */
-      left: 100px;  /* will be repositioned on load to sit above settings icon */
-      background: rgba(0,0,0,0.8);
+      bottom: 44px;
+      left: 20px;
+      background: rgba(0,0,0,0.82);
       color: #fff;
       padding:6px 10px;
       border-radius:6px;
@@ -190,9 +165,9 @@
       z-index:1400;
       cursor:pointer;
       white-space:nowrap;
+      display:block;
     }
 
-    /* Responsive safety */
     @media (max-width:420px){
       #wallpaperPanel { left:8px; width:86%; }
       #wallpaperControls { left:8px; width:86%; }
@@ -203,36 +178,28 @@
 
   <!-- Desktop Icons (all restored) -->
   <div class="icon" style="top:50px; left:40px;" data-file="deltarune.html" data-title="Deltarune">
-    <img src="icons/deltarune.png" alt="Deltarune">
-    <span>Deltarune</span>
+    <img src="icons/deltarune.png" alt="Deltarune"><span>Deltarune</span>
   </div>
   <div class="icon" style="top:150px; left:40px;" data-file="undertale.html" data-title="Undertale">
-    <img src="icons/undertale.png" alt="Undertale">
-    <span>Undertale</span>
+    <img src="icons/undertale.png" alt="Undertale"><span>Undertale</span>
   </div>
   <div class="icon" style="top:250px; left:40px;" data-file="Tanuki Sunset.html" data-title="Tanuki Sunset">
-    <img src="icons/tanuki.png" alt="Tanuki Sunset">
-    <span>Tanuki Sunset</span>
+    <img src="icons/tanuki.png" alt="Tanuki Sunset"><span>Tanuki Sunset</span>
   </div>
   <div class="icon" style="top:350px; left:40px;" data-file="Hollow Knight.html" data-title="Hollow Knight">
-    <img src="icons/hollow.png" alt="Hollow Knight">
-    <span>Hollow Knight</span>
+    <img src="icons/hollow.png" alt="Hollow Knight"><span>Hollow Knight</span>
   </div>
   <div class="icon" style="top:460px; left:40px;" data-file="pizzatower.html" data-title="Pizza Tower">
-    <img src="icons/pizza.png" alt="Pizza Tower">
-    <span>Pizza Tower</span>
+    <img src="icons/pizza.png" alt="Pizza Tower"><span>Pizza Tower</span>
   </div>
   <div class="icon" style="top:560px; left:40px;" data-file="drift.html" data-title="Drift Hunters">
-    <img src="icons/drift.png" alt="Drift Hunters">
-    <span>Drift Hunters</span>
+    <img src="icons/drift.png" alt="Drift Hunters"><span>Drift Hunters</span>
   </div>
-   <div class="icon" style="top:160px; left:150px;" data-file="Sort the Court.html" data-title="Sort The Court">
-    <img src="icons/sort-the-court.png" alt="Sort The Court">
-    <span>Sort the Court</span>
+  <div class="icon" style="top:160px; left:150px;" data-file="Sort the Court.html" data-title="Sort The Court">
+    <img src="icons/sort-the-court.png" alt="Sort The Court"><span>Sort the Court</span>
   </div>
   <div class="icon" style="top:50px; left:150px;" data-file="Madness.html" data-title="Project Nexus">
-    <img src="icons/nexus.png" alt="Project Nexus">
-    <span>Project Nexus</span>
+    <img src="icons/nexus.png" alt="Project Nexus"><span>Project Nexus</span>
   </div>
 
   <!-- Popup Window -->
@@ -259,11 +226,11 @@
     </div>
   </div>
 
-  <!-- Wallpaper Panel (minimal preview + closable tip) -->
+  <!-- Wallpaper Panel (preview + closable tip) -->
   <div id="wallpaperPanel" aria-hidden="true">
-    <div id="wallpaperPreview" title="Click to change wallpaper"></div>
+    <div id="wallpaperPreview" title="Click to change wallpaper" role="button" aria-label="Wallpaper preview"></div>
 
-    <div id="panelTip">
+    <div id="panelTip" role="dialog" aria-label="Change wallpaper tip">
       <span>⬅ change wallpaper here</span>
       <button id="closePanelTip" aria-label="Close tip">✕</button>
     </div>
@@ -273,22 +240,28 @@
   <div id="wallpaperControls" aria-hidden="true">
     <label>Choose Preset:
       <select id="presetSelect">
-        <!-- put your preset image paths - these are placeholders -->
         <option value="">(none)</option>
         <option value="wallpapers/preset1.jpg">Preset 1</option>
         <option value="wallpapers/preset2.jpg">Preset 2</option>
         <option value="wallpapers/preset3.jpg">Preset 3</option>
+        <option value="wallpapers/preset4.jpg">Preset 4</option>
+        <option value="wallpapers/preset5.jpg">Preset 5</option>
+        <option value="wallpapers/preset6.jpg">Preset 6</option>
       </select>
     </label>
 
     <label>Upload Image:
       <input type="file" id="wallpaperUpload" accept="image/*">
     </label>
-    <button id="closeWallpaperControls">Done</button>
+
+    <div class="controls-row">
+      <button id="removeWallpaperBtn">Remove Wallpaper</button>
+      <button id="closeWallpaperControls">Done</button>
+    </div>
   </div>
 
-  <!-- small persistent hint near the taskbar (positioned above settings icon) -->
-  <div id="wallpaperHint">change wallpaper here!</div>
+  <!-- small persistent hint near the taskbar (one-time) -->
+  <div id="wallpaperHint" role="note">change wallpaper here!</div>
 
   <!-- Taskbar -->
   <div class="taskbar">
@@ -296,35 +269,32 @@
       <img src="icons/code.png" alt="Code Editor" onclick="openApp('CodeEditor.html','Code Editor')">
       <img src="icons/paint.png" alt="Paint" onclick="openApp('Paint.html','Paint')">
       <img src="icons/music.png" alt="Music Player" onclick="toggleMusicPlayer()">
-      <!-- Settings icon now toggles wallpaper panel -->
+      <!-- settings toggles wallpaper panel -->
       <img src="icons/settings.png" alt="Settings" id="settingsBtn" onclick="toggleWallpaperPanel()">
     </div>
     <div id="clock"></div>
   </div>
 
   <script>
-    /* ---------- core popup / apps (kept exactly as original) ---------- */
+    /* ---------- Core popup / apps ---------- */
     const popup = document.getElementById('popup');
     const frame = document.getElementById('gameFrame');
     const popupName = document.getElementById('popupName');
     let isDraggingPopup = false, offsetX, offsetY;
     let isFull = false, prev = {};
 
-    // Open desktop games (in /games)
     function openGame(file, title){
       frame.src = "https://scrblz-rar.github.io/web-os/games/" + file;
       popupName.textContent = title;
       popup.style.display = "flex";
       popup.style.zIndex = Date.now();
     }
-    // Open apps (root directory)
     function openApp(file, title){
       frame.src = "https://scrblz-rar.github.io/web-os/" + file;
       popupName.textContent = title;
       popup.style.display = "flex";
       popup.style.zIndex = Date.now();
     }
-
     function closeGame(){
       popup.style.display = "none";
       frame.src = "";
@@ -364,18 +334,15 @@
     let isDraggingMusic = false, musicOffsetX, musicOffsetY;
 
     function toggleMusicPlayer(){
-      // toggle visibility, preserve previous absolute position if it exists
       if (musicPlayer.style.display === 'flex') {
         musicPlayer.style.display = 'none';
       } else {
         musicPlayer.style.display = 'flex';
-        // if the player already has left/top (user moved it), keep absolute positioning
         if (musicPlayer.style.left || musicPlayer.style.top) {
           musicPlayer.style.position = 'absolute';
           musicPlayer.style.right = 'auto';
           musicPlayer.style.bottom = 'auto';
         } else {
-          // default anchored position (bottom-right)
           musicPlayer.style.position = 'fixed';
           musicPlayer.style.right = '20px';
           musicPlayer.style.bottom = '40px';
@@ -384,37 +351,28 @@
         }
       }
     }
-    function closeMusicPlayer(){
-      musicPlayer.style.display = 'none';
-    }
+    function closeMusicPlayer(){ musicPlayer.style.display = 'none'; }
 
     musicBar.addEventListener('mousedown', e => {
-      // begin dragging - switch to absolute and remove right/bottom to avoid stretching
       isDraggingMusic = true;
-
-      // compute offsets using bounding rect for more accurate positioning
       const rect = musicPlayer.getBoundingClientRect();
       musicOffsetX = e.clientX - rect.left;
       musicOffsetY = e.clientY - rect.top;
-
-      // ensure it becomes absolute and remove right/bottom anchors so width doesn't stretch
       musicPlayer.style.position = 'absolute';
       musicPlayer.style.left = rect.left + 'px';
       musicPlayer.style.top = rect.top + 'px';
       musicPlayer.style.right = 'auto';
       musicPlayer.style.bottom = 'auto';
-
       e.preventDefault();
     });
     window.addEventListener('mousemove', e => {
       if(!isDraggingMusic) return;
-      // Only update left/top so width remains fixed
       musicPlayer.style.left = (e.clientX - musicOffsetX) + 'px';
       musicPlayer.style.top = (e.clientY - musicOffsetY) + 'px';
     });
     window.addEventListener('mouseup', ()=> isDraggingMusic = false);
 
-    /* ---------- Icon drag + double click ---------- */
+    /* ---------- Icon drag + dblclick ---------- */
     document.querySelectorAll('.icon').forEach(icon=>{
       let dragging=false, dx, dy;
       icon.addEventListener('mousedown', e=>{
@@ -449,115 +407,203 @@
       }
     });
 
-    /* ---------- Wallpaper panel & controls ---------- */
+    /* ---------- Wallpaper panel & behavior ---------- */
     const wallpaperPanel = document.getElementById('wallpaperPanel');
     const wallpaperPreview = document.getElementById('wallpaperPreview');
     const wallpaperControls = document.getElementById('wallpaperControls');
     const presetSelect = document.getElementById('presetSelect');
     const wallpaperUpload = document.getElementById('wallpaperUpload');
+    const removeWallpaperBtn = document.getElementById('removeWallpaperBtn');
     const closeWallpaperControls = document.getElementById('closeWallpaperControls');
     const panelTip = document.getElementById('panelTip');
     const closePanelTip = document.getElementById('closePanelTip');
     const wallpaperHint = document.getElementById('wallpaperHint');
     const settingsBtn = document.getElementById('settingsBtn');
 
-    // Toggle panel visibility (Settings icon)
     function toggleWallpaperPanel(){
       if (wallpaperPanel.style.display === 'flex') {
         wallpaperPanel.style.display = 'none';
         wallpaperControls.style.display = 'none';
       } else {
         wallpaperPanel.style.display = 'flex';
-        // position preview background from current body background
         syncPreviewWithBody();
       }
     }
 
-    // click preview to show full hidden controls
+    // Preview click toggles hidden controls
     wallpaperPreview.addEventListener('click', () => {
       wallpaperControls.style.display = wallpaperControls.style.display === 'flex' ? 'none' : 'flex';
-      // show a quick preview sync
       syncPreviewWithBody();
     });
 
-    // preset selection
+    // Apply preset
     presetSelect.addEventListener('change', e => {
       const val = e.target.value;
       if (!val) return;
-      applyWallpaperUrl(val);
+      applyWallpaper(val);
     });
 
-    // upload file
+    // Upload custom wallpaper
     wallpaperUpload.addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = ev => {
-        applyWallpaperUrl(ev.target.result);
+        applyWallpaper(ev.target.result);
       };
       reader.readAsDataURL(file);
     });
 
-    closeWallpaperControls.addEventListener('click', () => {
-      wallpaperControls.style.display = 'none';
+    // Remove wallpaper -> restore default pattern
+    removeWallpaperBtn.addEventListener('click', () => {
+      document.body.style.background = ''; // fall back to CSS repeating-conic-gradient
+      syncPreviewWithBody();
+      // also clear saved custom wallpaper if we persisted
+      try { localStorage.removeItem('customWallpaper'); } catch(e){}
     });
 
-    // panel tip close button
+    closeWallpaperControls.addEventListener('click', () => { wallpaperControls.style.display = 'none'; });
+
+    // Panel tip close (one-time)
     closePanelTip.addEventListener('click', () => {
       panelTip.style.display = 'none';
+      try { localStorage.setItem('panelTipClosed', 'true'); } catch(e){}
     });
 
-    // wallpaper hint click opens panel
+    // Hint click opens panel; clicking its close hides forever
     wallpaperHint.addEventListener('click', () => {
       toggleWallpaperPanel();
     });
 
-    function applyWallpaperUrl(url){
-      document.body.style.backgroundImage = `url('${url}')`;
-      document.body.style.backgroundRepeat = 'no-repeat';
-      document.body.style.backgroundSize = 'cover';
-      document.body.style.backgroundPosition = 'center';
-      // reflect in preview
+    // apply wallpaper (string can be URL or dataURL)
+    function applyWallpaper(url){
+      // replace entire background inline to avoid layered pattern
+      document.body.style.background = `url('${url}') center/cover no-repeat fixed`;
+      // set preview
       wallpaperPreview.style.backgroundImage = `url('${url}')`;
-      // auto-close controls for neatness
       wallpaperControls.style.display = 'none';
+      // persist user-chosen wallpaper so a reload doesn't cause weird layering
+      try { localStorage.setItem('customWallpaper', url); } catch(e){}
     }
 
-    // If body has no image (default pattern), show pattern in preview
+    // sync preview element with body background (pattern or image)
     function syncPreviewWithBody(){
-      const bg = window.getComputedStyle(document.body).backgroundImage;
+      // check if user has a custom wallpaper persisted or applied inline
+      let custom = null;
+      try { custom = localStorage.getItem('customWallpaper'); } catch(e){}
+      if (custom) {
+        // ensure body shows the custom wallpaper (persisted)
+        document.body.style.background = `url('${custom}') center/cover no-repeat fixed`;
+        wallpaperPreview.style.backgroundImage = `url('${custom}')`;
+        return;
+      }
+      // otherwise read computed style
+      const cs = window.getComputedStyle(document.body);
+      const bg = cs.backgroundImage;
       if (bg && bg !== 'none' && !bg.includes('repeating-conic-gradient')) {
-        // set preview background
+        // background is an image: use it
+        // computed style wraps url(...) so set preview with same value
         wallpaperPreview.style.backgroundImage = bg;
       } else {
-        // show the default repeating pattern inside preview (approx)
+        // no image — show the default repeating pattern inside preview
         wallpaperPreview.style.backgroundImage = "repeating-conic-gradient(#e0e0e0 0% 25%, rgba(0,0,0,0) 0% 50%)";
         wallpaperPreview.style.backgroundSize = '40px 40px';
       }
     }
 
-    // position wallpaperHint above the settings icon (run on load & resize)
+    // Position wallpaperHint above the settings icon
     function positionHint(){
       const settingsRect = settingsBtn.getBoundingClientRect();
       const hint = wallpaperHint;
       const hintWidth = hint.offsetWidth || 140;
-      // center the hint above the settings icon
-      let left = settingsRect.left + (settingsRect.width / 2) - (hintWidth / 2);
-      // constrain left so it doesn't go off-screen
+      let left = settingsRect.left + (settingsRect.width/2) - (hintWidth/2);
       left = Math.max(8, Math.min(left, window.innerWidth - hintWidth - 8));
-      hint.style.left = left + 'px';
-      // bottom set to match taskbar height
-      hint.style.bottom = (window.innerHeight - settingsRect.top + 6) * -1; // we override below for stable placement
-      // simpler: set bottom to 44px (just above taskbar)
+      hint.style.left = `${left}px`;
       hint.style.bottom = '44px';
     }
 
-    window.addEventListener('resize', positionHint);
+    // Only show hint/panel-tip if not closed before (persisted)
     window.addEventListener('load', () => {
+      // Hide wallpaperHint if user already closed it
+      const hintClosed = (() => { try { return localStorage.getItem('wallpaperHintClosed') === 'true'; } catch(e){ return false; } })();
+      const panelTipClosed = (() => { try { return localStorage.getItem('panelTipClosed') === 'true'; } catch(e){ return false; } })();
+
+      if (hintClosed) {
+        wallpaperHint.style.display = 'none';
+      } else {
+        wallpaperHint.style.display = 'block';
+      }
+
+      if (panelTipClosed) {
+        panelTip.style.display = 'none';
+      } else {
+        panelTip.style.display = 'flex';
+      }
+
       positionHint();
-      // initial preview sync
+      syncPreviewWithBody();
+
+      // restore persisted wallpaper if present
+      try {
+        const cw = localStorage.getItem('customWallpaper');
+        if (cw) {
+          document.body.style.background = `url('${cw}') center/cover no-repeat fixed`;
+          wallpaperPreview.style.backgroundImage = `url('${cw}')`;
+        }
+      } catch(e){}
+    });
+
+    // clicking outside the wallpaperPanel should close it (optional convenience)
+    window.addEventListener('click', e => {
+      const p = wallpaperPanel;
+      const controls = wallpaperControls;
+      const btn = settingsBtn;
+      if (!p.contains(e.target) && !controls.contains(e.target) && e.target !== btn) {
+        // don't close if clicking the hint (we want it clickable)
+        if (wallpaperPanel.style.display === 'flex') {
+          wallpaperPanel.style.display = 'none';
+          wallpaperControls.style.display = 'none';
+        }
+      }
+    });
+
+    // If user closes the wallpaperHint via right-click or double-click, make a close control:
+    // we'll allow keyboard "Escape" to close panel/hint temporarily:
+    window.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        wallpaperPanel.style.display = 'none';
+        wallpaperControls.style.display = 'none';
+      }
+    });
+
+    // Add a small close-on-right-click for the wallpaperHint to mark it closed forever
+    wallpaperHint.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      wallpaperHint.style.display = 'none';
+      try { localStorage.setItem('wallpaperHintClosed', 'true'); } catch(e){}
+    });
+
+    // Also allow left-click-to-close the wallpaperHint (permanent)
+    wallpaperHint.addEventListener('dblclick', () => {
+      wallpaperHint.style.display = 'none';
+      try { localStorage.setItem('wallpaperHintClosed', 'true'); } catch(e){}
+    });
+
+    // If user clicks the panelTip text, open the panel to change wallpaper
+    panelTip.addEventListener('click', () => {
+      wallpaperPanel.style.display = 'flex';
+      wallpaperControls.style.display = 'flex';
       syncPreviewWithBody();
     });
+
+    // allow user to permanently close the panel tip by right-clicking it as well
+    panelTip.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      panelTip.style.display = 'none';
+      try { localStorage.setItem('panelTipClosed', 'true'); } catch(e){}
+    });
+
+    window.addEventListener('resize', positionHint);
 
     /* ---------- Clock ---------- */
     function updateClock() {
@@ -568,8 +614,6 @@
     }
     setInterval(updateClock,1000);
     updateClock();
-
-    /* EOF */
   </script>
 </body>
 </html>
