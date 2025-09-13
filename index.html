@@ -17,6 +17,8 @@
       background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
       position:relative;
       user-select:none;
+      background-size:cover;
+      background-position:center;
     }
 
     /* Desktop Icons */
@@ -26,13 +28,25 @@
       cursor: pointer;
       position: absolute;
     }
-    .icon img {width: 64px; height: 64px; display:block; margin:0 auto; pointer-events:none;}
-    .icon span {
-      display:block; margin-top:4px; font-size:12px;
-      background:rgba(255,255,255,0.4); border-radius:4px; padding:2px 4px;
-      pointer-events:none;
+    .icon img {
+      width: 64px; height: 64px;
+      display:block; margin:0 auto;
+      pointer-events: none;
     }
-    .icon.selected {background:rgba(128,128,128,0.4); border-radius:6px; padding:4px 0;}
+    .icon span {
+      display:block;
+      margin-top:4px;
+      font-size:12px;
+      background:rgba(255,255,255,0.4);
+      border-radius:4px;
+      padding:2px 4px;
+      pointer-events: none;
+    }
+    .icon.selected {
+      background:rgba(128,128,128,0.4);
+      border-radius:6px;
+      padding:4px 0;
+    }
 
     /* Popup Window */
     .popup {
@@ -44,20 +58,21 @@
       z-index:999; resize:both;
     }
     .popup .titlebar{
-      background:var(--bar); color:var(--ink);
-      padding:6px 10px; display:flex; align-items:center;
+      background:var(--bar); padding:6px 10px; display:flex; align-items:center;
       cursor:move; border-bottom:1px solid var(--border);
     }
-    .popup iframe{flex:1; border:0; background:#000;}
-    .winbtns{margin-left:auto; display:flex;}
-    .winbtn{border:0; background:transparent; cursor:pointer; padding:0 10px;}
-    .winbtn:hover{background:var(--accent); color:#fff}
-    .winbtn.close:hover{background:#e81123; color:#fff}
+    .popup iframe{ flex:1; border:0; background:#000; }
+
+    .winbtns{ margin-left:auto; display:flex; }
+    .winbtn { border:0; background:transparent; cursor:pointer; padding:0 10px; }
+    .winbtn:hover { background:var(--accent); color:#fff }
+    .winbtn.close:hover { background:#e81123; color:#fff }
 
     /* Music Player */
     #musicPlayer {
-      position: absolute;
-      bottom: 40px; right: 20px;
+      position: fixed;
+      bottom: 40px;
+      right: 20px;
       width: 300px;
       background: var(--glass);
       border: 1px solid var(--border);
@@ -68,29 +83,41 @@
       z-index: 1200;
     }
     #musicPlayer .titlebar {
-      background: var(--bar); color:var(--ink);
-      padding: 6px 10px; display: flex; justify-content: space-between; align-items: center;
-      cursor: move; border-bottom: 1px solid var(--border);
+      background: var(--bar);
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: move;
+      border-bottom: 1px solid var(--border);
     }
-    #musicPlayer .titlebar button {border: none; background: transparent; cursor: pointer;}
-    #musicPlayer .content {padding: 10px;}
+    #musicPlayer .titlebar button {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    #musicPlayer .content {
+      padding: 10px;
+    }
 
     /* Taskbar */
     .taskbar {
       position:fixed; bottom:0; left:0; right:0;
-      height:32px; background:var(--bar); color:var(--ink);
+      height:32px; background:var(--bar);
       border-top:1px solid var(--border);
       display:flex; justify-content:space-between; align-items:center;
       padding:0 10px; font-size:13px; z-index:1000;
     }
-    .taskbar-left{display:flex; gap:6px; align-items:center;}
-    .taskbar-left img{height:24px; width:24px; cursor:pointer;}
+    .taskbar-left { display:flex; gap:6px; align-items:center; }
+    .taskbar-left img {
+      height:24px; width:24px; cursor:pointer;
+    }
 
     /* Settings Panel */
     #settingsPanel {
       position: absolute;
       bottom: 50px; left: 20px;
-      width: 280px;
+      width: 300px;
       background: var(--glass);
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -100,17 +127,48 @@
       padding: 10px;
       z-index: 1500;
     }
+    #settingsPanel h4 { margin: 0 0 6px 0; }
     #settingsPanel label {font-size:13px; display:block; margin-top:8px;}
-    #settingsPanel input {width:100%; margin-top:4px;}
+    #settingsPanel input[type="text"], #settingsPanel input[type="color"], #settingsPanel input[type="file"] {width:100%; margin-top:4px;}
+    #settingsPanel button { margin-top:8px; padding:6px 8px; border-radius:4px; border:1px solid var(--border); background:transparent; cursor:pointer;}
   </style>
 </head>
 <body>
 
   <!-- Desktop Icons -->
   <div class="icon" style="top:50px; left:40px;" data-file="deltarune.html" data-title="Deltarune">
-    <img src="icons/deltarune.png"><span>Deltarune</span>
+    <img src="icons/deltarune.png" alt="Deltarune">
+    <span>Deltarune</span>
   </div>
-  <!-- (other icons omitted for brevity) -->
+  <div class="icon" style="top:150px; left:40px;" data-file="undertale.html" data-title="Undertale">
+    <img src="icons/undertale.png" alt="Undertale">
+    <span>Undertale</span>
+  </div>
+  <div class="icon" style="top:250px; left:40px;" data-file="Tanuki Sunset.html" data-title="Tanuki Sunset">
+    <img src="icons/tanuki.png" alt="Tanuki Sunset">
+    <span>Tanuki Sunset</span>
+  </div>
+  <div class="icon" style="top:350px; left:40px;" data-file="Hollow Knight.html" data-title="Hollow Knight">
+    <img src="icons/hollow.png" alt="Hollow Knight">
+    <span>Hollow Knight</span>
+  </div>
+  <div class="icon" style="top:460px; left:40px;" data-file="pizzatower.html" data-title="Pizza Tower">
+    <img src="icons/pizza.png" alt="Pizza Tower">
+    <span>Pizza Tower</span>
+  </div>
+  <div class="icon" style="top:560px; left:40px;" data-file="drift.html" data-title="Drift Hunters">
+    <img src="icons/drift.png" alt="Drift Hunters">
+    <span>Drift Hunters</span>
+  </div>
+   <div class="icon" style="top:160px; left:150px;" data-file="Sort the Court.html" data-title="Sort The Court">
+    <img src="icons/sort-the-court.png" alt="Sort The Court">
+    <span>Sort the Court</span>
+  </div>
+  <div class="icon" style="top:50px; left:150px;" data-file="Madness.html" data-title="Project Nexus">
+    <img src="icons/nexus.png" alt="Project Nexus">
+    <span>Project Nexus</span>
+  </div>
+
 
   <!-- Popup Window -->
   <div id="popup" class="popup">
@@ -139,8 +197,8 @@
   <!-- Settings Panel -->
   <div id="settingsPanel">
     <h4>Settings</h4>
-    <label>Wallpaper URL: <input type="text" id="wallpaperInput" placeholder="Image URL"></label>
-    <button onclick="applyWallpaper()">Apply</button>
+    <label>Wallpaper Upload: <input type="file" id="wallpaperUpload" accept="image/*"></label>
+    <button id="removeWallpaperBtn">Remove Wallpaper</button>
     <label>Text Color: <input type="color" id="textColorPicker" value="#111111"></label>
     <label>Bar Color: <input type="color" id="barColorPicker" value="#f0f0f0"></label>
   </div>
@@ -148,65 +206,210 @@
   <!-- Taskbar -->
   <div class="taskbar">
     <div class="taskbar-left">
-      <img src="icons/code.png" onclick="openApp('CodeEditor.html','Code Editor')">
-      <img src="icons/paint.png" onclick="openApp('Paint.html','Paint')">
-      <img src="icons/music.png" onclick="toggleMusicPlayer()">
-      <img src="icons/settings.png" onclick="toggleSettings()">
+      <img src="icons/code.png" alt="Code Editor" onclick="openApp('CodeEditor.html','Code Editor')">
+      <img src="icons/paint.png" alt="Paint" onclick="openApp('Paint.html','Paint')">
+      <img src="icons/music.png" alt="Music Player" onclick="toggleMusicPlayer()">
+      <img src="icons/settings.png" alt="Settings" onclick="toggleSettings()">
     </div>
     <div id="clock"></div>
   </div>
 
   <script>
-    const popup=document.getElementById('popup');
-    const frame=document.getElementById('gameFrame');
-    const popupName=document.getElementById('popupName');
-    let isDraggingPopup=false,offsetX,offsetY,isFull=false,prev={};
+    const popup = document.getElementById('popup');
+    const frame = document.getElementById('gameFrame');
+    const popupName = document.getElementById('popupName');
+    let isDraggingPopup = false, offsetX, offsetY;
+    let isFull = false, prev = {};
 
-    function openGame(file,title){frame.src="games/"+file;popupName.textContent=title;popup.style.display="flex";popup.style.zIndex=Date.now();}
-    function openApp(file,title){frame.src=file;popupName.textContent=title;popup.style.display="flex";popup.style.zIndex=Date.now();}
-    function closeGame(){popup.style.display="none";frame.src="";isFull=false;}
-    function toggleFullscreen(){if(!isFull){prev={left:popup.style.left,top:popup.style.top,width:popup.style.width,height:popup.style.height};popup.style.left="0";popup.style.top="0";popup.style.width="100vw";popup.style.height="100vh";isFull=true;}else{popup.style.left=prev.left||"100px";popup.style.top=prev.top||"100px";popup.style.width=prev.width||"800px";popup.style.height=prev.height||"500px";isFull=false;}}
+    // Open desktop games (in /games)
+    function openGame(file, title){
+      frame.src = "https://scrblz-rar.github.io/web-os/games/" + file;
+      popupName.textContent = title;
+      popup.style.display = "flex";
+      popup.style.zIndex = Date.now();
+    }
+    // Open apps (root directory)
+    function openApp(file, title){
+      frame.src = "https://scrblz-rar.github.io/web-os/" + file;
+      popupName.textContent = title;
+      popup.style.display = "flex";
+      popup.style.zIndex = Date.now();
+    }
+
+    function closeGame(){
+      popup.style.display = "none";
+      frame.src = "";
+      isFull=false;
+    }
+    function toggleFullscreen(){
+      if(!isFull){
+        prev = {left:popup.style.left, top:popup.style.top, width:popup.style.width, height:popup.style.height};
+        popup.style.left="0"; popup.style.top="0"; popup.style.width="100vw"; popup.style.height="100vh";
+        isFull=true;
+      } else {
+        popup.style.left=prev.left||"100px"; popup.style.top=prev.top||"100px";
+        popup.style.width=prev.width||"800px"; popup.style.height=prev.height||"500px";
+        isFull=false;
+      }
+    }
 
     // Dragging popup
-    document.getElementById('popupTitle').addEventListener('mousedown',e=>{
-      if(isFull)return;isDraggingPopup=true;offsetX=e.clientX-popup.offsetLeft;offsetY=e.clientY-popup.offsetTop;e.preventDefault();
+    const bar = document.getElementById('popupTitle');
+    bar.addEventListener('mousedown', e=>{
+      if(isFull) return;
+      isDraggingPopup = true;
+      offsetX = e.clientX - popup.offsetLeft;
+      offsetY = e.clientY - popup.offsetTop;
+      e.preventDefault();
     });
-    window.addEventListener('mousemove',e=>{
-      if(!isDraggingPopup)return;popup.style.left=(e.clientX-offsetX)+"px";popup.style.top=(e.clientY-offsetY)+"px";
+    window.addEventListener('mousemove', e=>{
+      if(!isDraggingPopup) return;
+      popup.style.left = (e.clientX - offsetX) + "px";
+      popup.style.top = (e.clientY - offsetY) + "px";
     });
-    window.addEventListener('mouseup',()=>isDraggingPopup=false);
+    window.addEventListener('mouseup', ()=> isDraggingPopup=false);
 
-    // Music player toggle + drag (fixed stretch)
-    const musicPlayer=document.getElementById('musicPlayer');
-    const musicBar=document.getElementById('musicTitleBar');
-    let isDraggingMusic=false,musicOffsetX,musicOffsetY;
-    function toggleMusicPlayer(){musicPlayer.style.display=musicPlayer.style.display==='flex'?'none':'flex';musicPlayer.style.position='absolute';}
-    function closeMusicPlayer(){musicPlayer.style.display='none';}
-    musicBar.addEventListener('mousedown',e=>{
-      isDraggingMusic=true;musicOffsetX=e.clientX-musicPlayer.offsetLeft;musicOffsetY=e.clientY-musicPlayer.offsetTop;e.preventDefault();
+    // Music player toggle + drag (fixed stretch issue)
+    const musicPlayer = document.getElementById('musicPlayer');
+    const musicBar = document.getElementById('musicTitleBar');
+    let isDraggingMusic = false, musicOffsetX, musicOffsetY;
+
+    function toggleMusicPlayer(){
+      // toggle visibility, preserve previous absolute position if it exists
+      if (musicPlayer.style.display === 'flex') {
+        musicPlayer.style.display = 'none';
+      } else {
+        musicPlayer.style.display = 'flex';
+        // if the player already has left/top (user moved it), keep absolute positioning
+        if (musicPlayer.style.left || musicPlayer.style.top) {
+          musicPlayer.style.position = 'absolute';
+          musicPlayer.style.right = 'auto';
+          musicPlayer.style.bottom = 'auto';
+        } else {
+          // default anchored position (bottom-right)
+          musicPlayer.style.position = 'fixed';
+          musicPlayer.style.right = '20px';
+          musicPlayer.style.bottom = '40px';
+          musicPlayer.style.left = '';
+          musicPlayer.style.top = '';
+        }
+      }
+    }
+    function closeMusicPlayer(){
+      musicPlayer.style.display = 'none';
+    }
+
+    musicBar.addEventListener('mousedown', e => {
+      // begin dragging - switch to absolute and remove right/bottom to avoid stretching
+      isDraggingMusic = true;
+
+      // compute offsets using bounding rect for more accurate positioning
+      const rect = musicPlayer.getBoundingClientRect();
+      musicOffsetX = e.clientX - rect.left;
+      musicOffsetY = e.clientY - rect.top;
+
+      // ensure it becomes absolute and remove right/bottom anchors so width doesn't stretch
+      musicPlayer.style.position = 'absolute';
+      musicPlayer.style.left = rect.left + 'px';
+      musicPlayer.style.top = rect.top + 'px';
+      musicPlayer.style.right = 'auto';
+      musicPlayer.style.bottom = 'auto';
+
+      e.preventDefault();
     });
-    window.addEventListener('mousemove',e=>{
-      if(!isDraggingMusic)return;
-      musicPlayer.style.left=(e.clientX-musicOffsetX)+'px';
-      musicPlayer.style.top=(e.clientY-musicOffsetY)+'px';
+    window.addEventListener('mousemove', e => {
+      if(!isDraggingMusic) return;
+      // Only update left/top so width remains fixed
+      musicPlayer.style.left = (e.clientX - musicOffsetX) + 'px';
+      musicPlayer.style.top = (e.clientY - musicOffsetY) + 'px';
     });
-    window.addEventListener('mouseup',()=>isDraggingMusic=false);
+    window.addEventListener('mouseup', ()=> isDraggingMusic = false);
+
+    // Icon drag + double click
+    document.querySelectorAll('.icon').forEach(icon=>{
+      let dragging=false, dx, dy;
+      icon.addEventListener('mousedown', e=>{
+        document.querySelectorAll('.icon').forEach(i=>i.classList.remove('selected'));
+        icon.classList.add('selected');
+        dragging=true;
+        dx = e.clientX - icon.offsetLeft;
+        dy = e.clientY - icon.offsetTop;
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', e=>{
+        if(!dragging) return;
+        icon.style.left = (e.clientX - dx)+"px";
+        icon.style.top = (e.clientY - dy)+"px";
+      });
+      window.addEventListener('mouseup', ()=> dragging=false);
+
+      icon.addEventListener('dblclick', ()=>{
+        const file = icon.dataset.file;
+        const title = icon.dataset.title;
+        openGame(file, title);
+      });
+    });
 
     // MP3 upload
-    document.getElementById('mp3Upload').addEventListener('change',e=>{
-      const file=e.target.files[0];if(file){const audio=document.getElementById('audioPlayer');audio.src=URL.createObjectURL(file);audio.play();}
+    document.getElementById('mp3Upload').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if(file){
+        const audio = document.getElementById('audioPlayer');
+        audio.src = URL.createObjectURL(file);
+        audio.play();
+      }
     });
 
     // Settings panel
-    const settings=document.getElementById('settingsPanel');
-    function toggleSettings(){settings.style.display=settings.style.display==='flex'?'none':'flex';settings.style.flexDirection='column';}
-    function applyWallpaper(){const url=document.getElementById('wallpaperInput').value;if(url)document.body.style.backgroundImage=`url('${url}')`;document.body.style.backgroundSize="cover";}
-    document.getElementById('textColorPicker').addEventListener('input',e=>{document.documentElement.style.setProperty('--ink',e.target.value);});
-    document.getElementById('barColorPicker').addEventListener('input',e=>{document.documentElement.style.setProperty('--bar',e.target.value);});
+    const settings = document.getElementById('settingsPanel');
+    function toggleSettings(){
+      settings.style.display = settings.style.display === 'flex' ? 'none' : 'flex';
+      settings.style.flexDirection = 'column';
+    }
+
+    // Wallpaper upload (local file)
+    const wallpaperUpload = document.getElementById('wallpaperUpload');
+    wallpaperUpload.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        // Apply the image as body background and remove repeating pattern
+        document.body.style.backgroundImage = `url('${ev.target.result}')`;
+        document.body.style.backgroundRepeat = 'no-repeat';
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Remove wallpaper (restore original repeating pattern)
+    document.getElementById('removeWallpaperBtn').addEventListener('click', () => {
+      document.body.style.backgroundImage = '';
+      document.body.style.backgroundRepeat = '';
+      document.body.style.backgroundSize = '';
+      document.body.style.backgroundPosition = '';
+      // reset to original repeating-conic-gradient declared in CSS
+    });
+
+    // Color pickers
+    document.getElementById('textColorPicker').addEventListener('input', e=>{
+      document.documentElement.style.setProperty('--ink', e.target.value);
+      // body color inherits var(--ink) so most text will change
+    });
+    document.getElementById('barColorPicker').addEventListener('input', e=>{
+      document.documentElement.style.setProperty('--bar', e.target.value);
+    });
 
     // Clock
-    function updateClock(){const now=new Date();document.getElementById('clock').textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;}
-    setInterval(updateClock,1000);updateClock();
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      const date = now.toLocaleDateString();
+      document.getElementById('clock').textContent = `${date} ${time}`;
+    }
+    setInterval(updateClock,1000);
+    updateClock();
   </script>
 </body>
 </html>
