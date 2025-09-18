@@ -110,6 +110,25 @@
     .taskbar-left img {
       height:24px; width:24px; cursor:pointer;
     }
+
+    /* Backup Buttons (styled to match taskbar UI) */
+    .backup-btn {
+      background: var(--bar);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .backup-btn:hover {
+      background: var(--accent);
+      color: white;
+    }
+    .backup-btn input[type="file"] { display: none; }
   </style>
 </head>
 <body>
@@ -188,6 +207,12 @@
       <img src="icons/code.png" alt="Code Editor" onclick="openApp('CodeEditor.html','Code Editor')">
       <img src="icons/paint.png" alt="Paint" onclick="openApp('Paint.html','Paint')">
       <img src="icons/music.png" alt="Music Player" onclick="toggleMusicPlayer()">
+      <!-- Added Backup Buttons (styled to match) -->
+      <button class="backup-btn" onclick="saveData()">💾 Save Data</button>
+      <label class="backup-btn">
+        📂 Load Data
+        <input type="file" onchange="loadData(event)">
+      </label>
     </div>
     <div id="clock"></div>
   </div>
@@ -316,6 +341,182 @@
     }
     setInterval(updateClock,1000);
     updateClock();
+
+    // Save & Load Functions (as provided)
+    async function saveData() {
+      alert("This might take a while, dont touch anything other than this OK button");
+      const result = {};
+      result.cookies = document.cookie;
+      result.localStorage = {...localStorage};
+      result.sessionStorage = {...sessionStorage};
+      result.indexedDB = {};
+      const dbs = await indexedDB.databases();
+      for (const dbInfo of dbs) {
+        if (!dbInfo.name) continue;
+        result.indexedDB[dbInfo.name] = {};
+        await new Promise((resolve, reject) => {
+          const openRequest = indexedDB.open(dbInfo.name, dbInfo.version);
+          openRequest.onerror = () => reject(openRequest.error);
+          openRequest.onsuccess = () => {
+            const db = openRequest.result;
+            const storeNames = Array.from(db.objectStoreNames);
+            if (storeNames.length === 0) {
+              resolve();
+              return;
+            }
+            const transaction = db.transaction(storeNames, "readonly");
+            const storePromises = [];
+            for (const storeName of storeNames) {
+              result.indexedDB[dbInfo.name][storeName] = [];
+              const store = transaction.objectStore(storeName);
+              const getAllRequest = store.getAll();
+              const p = new Promise((res, rej) => {
+                getAllRequest.onsuccess = () => {
+                  result.indexedDB[dbInfo.name][storeName] = sanitizeData(getAllRequest.result, 1000, 100);
+                  res();
+                };
+                getAllRequest.onerror = () => rej(getAllRequest.error);
+              });
+              storePromises.push(p);
+            }
+            Promise.all(storePromises).then(() => resolve());
+          };
+        });
+      }
+
+      result.caches = {};
+      const cacheNames = await caches.keys();
+      for (const cacheName of cacheNames) {
+        const cache = await caches.open(cacheName);
+        const requests = await cache.keys();
+        result.caches[cacheName] = [];
+        for (const req of requests) {
+          const response = await cache.match(req);
+          if (!response) continue;
+          const cloned = response.clone();
+          const contentType = cloned.headers.get('content-type') || '';
+          let body;
+          try {
+            if (contentType.includes('application/json')) {
+              body = await cloned.json();
+            } else if (contentType.includes('text') || contentType.includes('javascript')) {
+              body = await cloned.text();
+            } else {
+              const buffer = await cloned.arrayBuffer();
+              body = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+            }
+          } catch (e) {
+            body = '[Unable to read body]';
+          }
+          result.caches[cacheName].push({
+            url: req.url,
+            body,
+            contentType
+          });
+        }
+      }
+    
+      alert("Done, wait for the download to come");
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(new Blob([JSON.stringify(result)], {
+          type: "text/plain"
+      }));
+      link.download = `${Date.now()}.data`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    
+    async function loadData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function (e) {
+          const data = JSON.parse(e.target.result);
+          if (data.cookies) {
+              data.cookies.split(';').forEach(cookie => {
+                document.cookie = cookie.trim();
+              });
+            }
+          
+            if (data.localStorage) {
+              for (const key in data.localStorage) {
+                localStorage.setItem(key, data.localStorage[key]);
+              }
+            }
+          
+            if (data.sessionStorage) {
+              for (const key in data.sessionStorage) {
+                sessionStorage.setItem(key, data.sessionStorage[key]);
+              }
+            }
+          
+            if (data.indexedDB) {
+              for (const dbName in data.indexedDB) {
+                const stores = data.indexedDB[dbName];
+                await new Promise((resolve, reject) => {
+                  const request = indexedDB.open(dbName, 1);
+                  request.onupgradeneeded = e => {
+                    const db = e.target.result;
+                    for (const storeName in stores) {
+                      if (!db.objectStoreNames.contains(storeName)) {
+                        db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
+                      }
+                    }
+                  };
+                  request.onsuccess = e => {
+                    const db = e.target.result;
+                    const transaction = db.transaction(Object.keys(stores), 'readwrite');
+                    transaction.onerror = () => reject(transaction.error);
+                    let pendingStores = Object.keys(stores).length;
+          
+                    for (const storeName in stores) {
+                      const objectStore = transaction.objectStore(storeName);
+                      objectStore.clear().onsuccess = () => {
+                        for (const item of stores[storeName]) {
+                          objectStore.put(item);
+                        }
+                        pendingStores--;
+                        if (pendingStores === 0) resolve();
+                      };
+                    }
+                  };
+                  request.onerror = () => reject(request.error);
+                });
+              }
+            }
+          
+            if (data.caches) {
+              for (const cacheName in data.caches) {
+                const cache = await caches.open(cacheName);
+                await cache.keys().then(keys => Promise.all(keys.map(k => cache.delete(k)))); // clear existing
+          
+                for (const entry of data.caches[cacheName]) {
+                  let responseBody;
+                  if (entry.contentType.includes('application/json')) {
+                    responseBody = JSON.stringify(entry.body);
+                  } else if (entry.contentType.includes('text') || entry.contentType.includes('javascript')) {
+                    responseBody = entry.body;
+                  } else {
+                    const binaryStr = atob(entry.body);
+                    const len = binaryStr.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                      bytes[i] = binaryStr.charCodeAt(i);
+                    }
+                    responseBody = bytes.buffer;
+                  }
+                  const headers = new Headers({ 'content-type': entry.contentType });
+                  const response = new Response(responseBody, { headers });
+                  await cache.put(entry.url, response);
+                }
+              }
+            }
+          alert("Data loaded");
+      };
+      alert("This might take a while, dont touch anything other than this OK button");
+      reader.readAsText(file);
+    }
   </script>
 </body>
 </html>
