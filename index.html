@@ -256,13 +256,13 @@
     musicBar.addEventListener('mousedown', e => {
       isDraggingMusic = true;
       musicOffsetX = e.clientX - musicPlayer.offsetLeft;
-      musicOffsetY = e.clientY - musicPlayer.offsetTop;
+      musicOffsetY = e.clientY - musicPlayer.offsetRight;
       e.preventDefault();
     });
     window.addEventListener('mousemove', e => {
       if(!isDraggingMusic) return;
       musicPlayer.style.left = (e.clientX - musicOffsetX) + 'px';
-      musicPlayer.style.top = (e.clientY - musicOffsetY) + 'px';
+      musicPlayer.style.right = (e.clientY - musicOffsetY) + 'px';
       musicPlayer.style.position = 'absolute';
     });
     window.addEventListener('mouseup', ()=> isDraggingMusic = false);
