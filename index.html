@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>web-os</title>
   <style>
     :root{
@@ -98,6 +98,21 @@
       padding: 10px;
     }
 
+    /* Status toast (non-blocking) */
+    #saveStatus {
+      position: fixed;
+      right: 20px;
+      bottom: 44px;
+      background: var(--bar);
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 6px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+      z-index: 2000;
+      display: none;
+      font-size: 13px;
+    }
+
     /* Taskbar */
     .taskbar {
       position:fixed; bottom:0; left:0; right:0;
@@ -107,9 +122,12 @@
       padding:0 10px; font-size:13px; z-index:1000;
     }
     .taskbar-left { display:flex; gap:6px; align-items:center; }
-    .taskbar-left img, .taskbar-left button {
+    .taskbar-left img, .taskbar-left button, .taskbar-left label {
       height:24px; width:24px; cursor:pointer; background:none; border:none; padding:0;
+      display:inline-flex; align-items:center; justify-content:center;
     }
+    .taskbar-left label { gap:6px; }
+    input[type="file"] { display:none; }
   </style>
 </head>
 <body>
@@ -139,7 +157,7 @@
     <img src="icons/drift.png" alt="Drift Hunters">
     <span>Drift Hunters</span>
   </div>
-  <div class="icon" style="top:160px; left:150px;" data-file="Sort the Court.html" data-title="Sort The Court">
+   <div class="icon" style="top:160px; left:150px;" data-file="Sort the Court.html" data-title="Sort The Court">
     <img src="icons/sort-the-court.png" alt="Sort The Court">
     <span>Sort the Court</span>
   </div>
@@ -180,35 +198,44 @@
     </div>
   </div>
 
+  <!-- Status toast -->
+  <div id="saveStatus"></div>
+
   <!-- Taskbar -->
   <div class="taskbar">
     <div class="taskbar-left">
       <img src="icons/code.png" alt="Code Editor" onclick="openApp('CodeEditor.html','Code Editor')">
       <img src="icons/paint.png" alt="Paint" onclick="openApp('Paint.html','Paint')">
       <img src="icons/music.png" alt="Music Player" onclick="toggleMusicPlayer()">
-      <button onclick="saveData()" title="Save Game Data">💾</button>
-      <label title="Load Game Data">
-        📂<input type="file" style="display:none" onchange="loadData(event)">
+
+      <!-- Save / Load buttons (taskbar) -->
+      <button id="saveBtn" title="Save all game data (cookies + storage + indexedDB + caches)">💾</button>
+
+      <label title="Load all game data">
+        📂
+        <input id="loadFile" type="file" accept=".webosdata,.json">
       </label>
     </div>
     <div id="clock"></div>
   </div>
 
   <script>
+    /* -------------------------
+       Basic UI (unchanged behavior)
+       ------------------------- */
     const popup = document.getElementById('popup');
     const frame = document.getElementById('gameFrame');
     const popupName = document.getElementById('popupName');
     let isDraggingPopup = false, offsetX, offsetY;
     let isFull = false, prev = {};
 
-    // Open desktop games (in /games)
     function openGame(file, title){
+      // games expected at ./games/<file>
       frame.src = "./games/" + file;
       popupName.textContent = title;
       popup.style.display = "flex";
       popup.style.zIndex = Date.now();
     }
-    // Open apps (root directory)
     function openApp(file, title){
       frame.src = "./" + file;
       popupName.textContent = title;
@@ -233,7 +260,7 @@
       }
     }
 
-    // Dragging popup
+    // Dragging popup titlebar
     const bar = document.getElementById('popupTitle');
     bar.addEventListener('mousedown', e=>{
       if(isFull) return;
@@ -249,7 +276,7 @@
     });
     window.addEventListener('mouseup', ()=> isDraggingPopup=false);
 
-    // Music player toggle + drag
+    // Music player
     const musicPlayer = document.getElementById('musicPlayer');
     const musicBar = document.getElementById('musicTitleBar');
     let isDraggingMusic = false, musicOffsetX, musicOffsetY;
@@ -295,19 +322,22 @@
       icon.addEventListener('dblclick', ()=>{
         const file = icon.dataset.file;
         const title = icon.dataset.title;
-        openGame(file, title);
+        if (file && title) openGame(file, title);
       });
     });
 
     // MP3 upload
-    document.getElementById('mp3Upload').addEventListener('change', e => {
-      const file = e.target.files[0];
-      if(file){
-        const audio = document.getElementById('audioPlayer');
-        audio.src = URL.createObjectURL(file);
-        audio.play();
-      }
-    });
+    const mp3Upload = document.getElementById('mp3Upload');
+    if (mp3Upload) {
+      mp3Upload.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if(file){
+          const audio = document.getElementById('audioPlayer');
+          audio.src = URL.createObjectURL(file);
+          audio.play();
+        }
+      });
+    }
 
     // Clock
     function updateClock() {
@@ -319,57 +349,459 @@
     setInterval(updateClock,1000);
     updateClock();
 
-    // Save/Load Game Data
-    function sanitizeData(data, maxItems = 1000, maxLength = 100) {
-      if (!Array.isArray(data)) return data;
-      return data.slice(0, maxItems).map(item => {
-        if (typeof item === "string" && item.length > maxLength) {
-          return item.substring(0, maxLength) + "...";
-        } else if (typeof item === "object") {
-          try { return JSON.parse(JSON.stringify(item)); } catch { return "[Unserializable Object]"; }
+    /* -------------------------
+       Utility UI: status toast
+       ------------------------- */
+    const saveStatus = document.getElementById('saveStatus');
+    let statusTimer = null;
+    function showStatus(msg, timeout=5000){
+      clearTimeout(statusTimer);
+      saveStatus.textContent = msg;
+      saveStatus.style.display = 'block';
+      if(timeout>0) statusTimer = setTimeout(()=> saveStatus.style.display='none', timeout);
+    }
+    function hideStatus(){ saveStatus.style.display='none'; clearTimeout(statusTimer); }
+
+    /* -------------------------
+       Serialization helpers
+       ------------------------- */
+    function safeStringify(obj){
+      try { return JSON.stringify(obj); }
+      catch(e) {
+        // fallback: strip circular refs (simple)
+        const seen = new WeakSet();
+        return JSON.stringify(obj, function(k,v){
+          if (typeof v === 'object' && v !== null) {
+            if (seen.has(v)) return "[Circular]";
+            seen.add(v);
+          }
+          return v;
+        });
+      }
+    }
+
+    function sanitizeArray(arr, maxItems=200, maxItemSize=100000){
+      if(!Array.isArray(arr)) return arr;
+      const slice = arr.slice(0, maxItems);
+      return slice.map(item => {
+        if (typeof item === 'string' && item.length > maxItemSize) return item.slice(0, maxItemSize) + '...';
+        if (typeof item === 'object') {
+          try { return JSON.parse(JSON.stringify(item)); }
+          catch { return "[Unserializable Object]"; }
         }
         return item;
       });
     }
 
-    async function saveData() {
-      alert("Saving your game data, please wait...");
-      const result = {};
-      result.cookies = document.cookie;
-      result.localStorage = { ...localStorage };
-      result.sessionStorage = { ...sessionStorage };
-
-      result.indexedDB = {};
-      const dbs = await indexedDB.databases();
-      for (const dbInfo of dbs) {
-        if (!dbInfo.name) continue;
-        result.indexedDB[dbInfo.name] = {};
-        await new Promise((resolve, reject) => {
-          const openRequest = indexedDB.open(dbInfo.name, dbInfo.version);
-          openRequest.onerror = () => reject(openRequest.error);
-          openRequest.onsuccess = () => {
-            const db = openRequest.result;
-            const storeNames = Array.from(db.objectStoreNames);
-            if (storeNames.length === 0) { resolve(); return; }
-            const transaction = db.transaction(storeNames, "readonly");
-            const storePromises = [];
-            for (const storeName of storeNames) {
-              result.indexedDB[dbInfo.name][storeName] = [];
-              const store = transaction.objectStore(storeName);
-              const getAllRequest = store.getAll();
-              const p = new Promise((res, rej) => {
-                getAllRequest.onsuccess = () => {
-                  result.indexedDB[dbInfo.name][storeName] = sanitizeData(getAllRequest.result);
-                  res();
-                };
-                getAllRequest.onerror = () => rej(getAllRequest.error);
-              });
-              storePromises.push(p);
-            }
-            Promise.all(storePromises).then(resolve);
-          };
-        });
+    async function readResponseBodySafe(response){
+      // returns either JSON/text or base64-limited string with type
+      const ct = (response.headers.get('content-type') || '').toLowerCase();
+      try {
+        if (ct.includes('application/json')) {
+          const json = await response.clone().json();
+          return {type:'json', body: json};
+        }
+        if (ct.includes('text') || ct.includes('javascript') || ct.includes('html')) {
+          const text = await response.clone().text();
+          const max = 20000;
+          return {type:'text', body: text.length>max ? text.slice(0,max)+'...':'', truncated: text.length>max};
+        }
+        // binary
+        const buffer = await response.clone().arrayBuffer();
+        const u8 = new Uint8Array(buffer);
+        // base64 encode with limit
+        const maxBytes = 50000;
+        let b64;
+        if (u8.length > maxBytes) {
+          const part = u8.slice(0, maxBytes);
+          b64 = btoa(String.fromCharCode(...part)) + '...';
+          return {type:'binary', body:b64, truncated:true};
+        } else {
+          b64 = btoa(String.fromCharCode(...u8));
+          return {type:'binary', body:b64, truncated:false};
+        }
+      } catch(e){
+        return {type:'error', body:'[unable to read response]'};
       }
+    }
 
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(new Blob([JSON.stringify(result)], { type: "text
+    /* -------------------------
+       Main: Save all data (lock-in)
+       ------------------------- */
+    async function saveAllData(){
+      // non-blocking UI; show progress
+      showStatus('Collecting data...');
+      const result = {
+        meta: { savedAt: Date.now(), origin: location.origin, page: location.pathname },
+        cookies: null,
+        localStorage: {},
+        sessionStorage: {},
+        iframeLocalStorage: null, // optional snapshot of currently open game's localStorage (if accessible)
+        indexedDB: {},
+        caches: {}
+      };
+
+      try {
+        // cookies
+        try {
+          result.cookies = document.cookie || '';
+        } catch(e){
+          result.cookies = '';
+        }
+
+        // localStorage
+        try {
+          for (let i=0;i<localStorage.length;i++){
+            const k = localStorage.key(i);
+            result.localStorage[k] = localStorage.getItem(k);
+          }
+        } catch(e){ console.warn('localStorage read error', e); }
+
+        // sessionStorage
+        try {
+          for (let i=0;i<sessionStorage.length;i++){
+            const k = sessionStorage.key(i);
+            result.sessionStorage[k] = sessionStorage.getItem(k);
+          }
+        } catch(e){ console.warn('sessionStorage read error', e); }
+
+        // iframe snapshot of storage (if same-origin and currently loaded)
+        try {
+          if (frame.src && frame.contentWindow && frame.contentWindow.localStorage) {
+            const snap = {};
+            for (let i=0;i<frame.contentWindow.localStorage.length;i++){
+              const k = frame.contentWindow.localStorage.key(i);
+              snap[k] = frame.contentWindow.localStorage.getItem(k);
+            }
+            result.iframeLocalStorage = { url: frame.src, storage: snap };
+          }
+        } catch(e){ /* ignore if cross-origin */ }
+
+        // indexedDB (modern browsers)
+        if (indexedDB && indexedDB.databases) {
+          try {
+            const dbs = await indexedDB.databases();
+            for (const dbInfo of dbs) {
+              if (!dbInfo.name) continue;
+              result.indexedDB[dbInfo.name] = { version: dbInfo.version || 1, stores: {} };
+
+              // open DB and read stores
+              await new Promise((resolve, reject) => {
+                const openReq = indexedDB.open(dbInfo.name);
+                openReq.onerror = () => { console.warn('open indexeddb error', openReq.error); resolve(); };
+                openReq.onsuccess = () => {
+                  const db = openReq.result;
+                  const storeNames = Array.from(db.objectStoreNames);
+                  if (storeNames.length === 0) { db.close(); resolve(); return; }
+                  const tx = db.transaction(storeNames, 'readonly');
+                  let pending = storeNames.length;
+                  for (const storeName of storeNames) {
+                    const store = tx.objectStore(storeName);
+                    const getAll = store.getAll();
+                    getAll.onerror = () => { result.indexedDB[dbInfo.name].stores[storeName] = '[getAll error]'; pending--; if (!pending){ db.close(); resolve(); } };
+                    getAll.onsuccess = () => {
+                      // sanitize and limit size
+                      result.indexedDB[dbInfo.name].stores[storeName] = sanitizeArray(getAll.result, 200, 100000);
+                      pending--;
+                      if (!pending){ db.close(); resolve(); }
+                    };
+                  }
+                };
+              });
+            }
+          } catch(e){ console.warn('indexedDB collection failed', e); }
+        } else {
+          console.warn('indexedDB.databases() not supported in this browser — skipping indexedDB snapshot');
+        }
+
+        // caches
+        if ('caches' in window) {
+          try {
+            const cacheNames = await caches.keys();
+            for (const cacheName of cacheNames) {
+              try {
+                const cache = await caches.open(cacheName);
+                const requests = await cache.keys();
+                result.caches[cacheName] = [];
+                for (const req of requests) {
+                  try {
+                    const resp = await cache.match(req);
+                    if (!resp) continue;
+                    const body = await readResponseBodySafe(resp);
+                    result.caches[cacheName].push({
+                      url: req.url,
+                      contentType: resp.headers.get('content-type') || '',
+                      body
+                    });
+                  } catch(e){ console.warn('cache entry read fail', e); }
+                }
+              } catch(e){ console.warn('open cache fail', cacheName, e); }
+            }
+          } catch(e){ console.warn('caches read error', e); }
+        }
+
+        // Done collecting
+        showStatus('Preparing download...');
+        // stringify (safe)
+        const blob = new Blob([safeStringify(result)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `webos-backup-${Date.now()}.webosdata`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showStatus('Saved. Backup downloaded.', 3000);
+      } catch (err) {
+        console.error('save error', err);
+        showStatus('Save failed — see console', 6000);
+      }
+    }
+
+    /* -------------------------
+       Load saved file and restore
+       ------------------------- */
+    async function loadAllDataFromFile(file){
+      if (!file) return;
+      showStatus('Restoring backup...');
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        // cookies: rewrite each cookie pair (attributes lost)
+        try {
+          if (data.cookies) {
+            // split cookie string by ';' and set each piece as cookie with path=/
+            const parts = data.cookies.split(';').map(p => p.trim()).filter(Boolean);
+            for (const part of parts) {
+              // If part includes '=' set it; else skip
+              if (part.includes('=')) {
+                // set cookie with path=/ so it's available site-wide
+                try { document.cookie = part + '; path=/'; } catch(e){ console.warn('cookie set failed', e); }
+              }
+            }
+          }
+        } catch(e){ console.warn('cookie restore error', e); }
+
+        // localStorage
+        try {
+          if (data.localStorage) {
+            for (const k of Object.keys(data.localStorage)) {
+              try { localStorage.setItem(k, data.localStorage[k]); } catch(e){ console.warn('localStorage set fail', k, e); }
+            }
+          }
+        } catch(e){ console.warn('localStorage restore error', e); }
+
+        // sessionStorage
+        try {
+          if (data.sessionStorage) {
+            for (const k of Object.keys(data.sessionStorage)) {
+              try { sessionStorage.setItem(k, data.sessionStorage[k]); } catch(e){ console.warn('sessionStorage set fail', k, e); }
+            }
+          }
+        } catch(e){ console.warn('sessionStorage restore error', e); }
+
+        // iframe localStorage snapshot (if any)
+        try {
+          if (data.iframeLocalStorage && frame.contentWindow && frame.contentWindow.localStorage) {
+            const obj = data.iframeLocalStorage.storage || {};
+            for (const k of Object.keys(obj)) {
+              try { frame.contentWindow.localStorage.setItem(k, obj[k]); } catch(e){ /* ignore */ }
+            }
+          }
+        } catch(e){ /* ignore cross-origin or failures */ }
+
+        // indexedDB restore
+        if (data.indexedDB) {
+          for (const dbName of Object.keys(data.indexedDB)) {
+            const dbObj = data.indexedDB[dbName];
+            const stores = dbObj.stores || {};
+            // First open current DB to get its version (if exists)
+            await new Promise((resolve) => {
+              // open without version to read existing version (works in many browsers)
+              let opened = false;
+              const r = indexedDB.open(dbName);
+              r.onsuccess = (ev) => {
+                const existingDb = r.result;
+                const existingVersion = existingDb.version || 1;
+                existingDb.close();
+                // If all stores exist, write directly; else bump version to create stores
+                const writeStores = async () => {
+                  try {
+                    const r2 = indexedDB.open(dbName);
+                    r2.onsuccess = () => {
+                      const db = r2.result;
+                      const tx = db.transaction(Object.keys(stores), 'readwrite');
+                      tx.oncomplete = () => { db.close(); resolve(); };
+                      tx.onerror = () => { console.warn('tx error writing stores', tx.error); db.close(); resolve(); };
+                      for (const storeName of Object.keys(stores)) {
+                        try {
+                          if (!db.objectStoreNames.contains(storeName)) {
+                            // cannot create store without version bump; skip (continue to version bump below)
+                            console.warn('store missing (will require upgrade):', storeName);
+                          } else {
+                            const os = tx.objectStore(storeName);
+                            // clear and add items
+                            os.clear().onsuccess = () => {
+                              const arr = stores[storeName] || [];
+                              for (const item of arr) {
+                                try { os.put(item); } catch(e){ /* ignore object structure issues */ }
+                              }
+                            };
+                          }
+                        } catch(e){ console.warn('write store error', e); }
+                      }
+                    };
+                    r2.onerror = () => { console.warn('open for write error', r2.error); resolve(); };
+                  } catch(e) {
+                    console.warn('writeStores error', e);
+                    resolve();
+                  }
+                };
+
+                // check missing stores
+                const missing = Object.keys(stores).some(s => !r.result.objectStoreNames.contains(s));
+                if (!missing) {
+                  // write directly
+                  writeStores();
+                } else {
+                  // need to bump version to create missing stores
+                  const newVer = existingVersion + 1;
+                  const r3 = indexedDB.open(dbName, newVer);
+                  r3.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    for (const storeName of Object.keys(stores)) {
+                      if (!db.objectStoreNames.contains(storeName)) {
+                        try { db.createObjectStore(storeName, { keyPath:'id', autoIncrement:true }); }
+                        catch(e){ console.warn('createObjectStore fail', e); }
+                      }
+                    }
+                  };
+                  r3.onsuccess = () => {
+                    const db = r3.result;
+                    const tx = db.transaction(Object.keys(stores), 'readwrite');
+                    tx.oncomplete = () => { db.close(); resolve(); };
+                    tx.onerror = () => { console.warn('tx error after upgrade', tx.error); db.close(); resolve(); };
+                    for (const storeName of Object.keys(stores)) {
+                      try {
+                        const os = tx.objectStore(storeName);
+                        os.clear().onsuccess = () => {
+                          const arr = stores[storeName] || [];
+                          for (const item of arr) {
+                            try { os.put(item); } catch(e){ /* ignore */ }
+                          }
+                        };
+                      } catch(e){ console.warn('put after upgrade failed', e); }
+                    }
+                  };
+                  r3.onerror = () => { console.warn('upgrade open failed', r3.error); resolve(); };
+                }
+              };
+              r.onerror = () => {
+                // DB might not exist; create it with stores
+                const rNew = indexedDB.open(dbName, 1);
+                rNew.onupgradeneeded = (e) => {
+                  const db = e.target.result;
+                  for (const storeName of Object.keys(stores)) {
+                    if (!db.objectStoreNames.contains(storeName)) {
+                      try { db.createObjectStore(storeName, { keyPath:'id', autoIncrement:true }); } catch(e) { /* ignore */ }
+                    }
+                  }
+                };
+                rNew.onsuccess = () => {
+                  const db = rNew.result;
+                  const tx = db.transaction(Object.keys(stores), 'readwrite');
+                  tx.oncomplete = () => { db.close(); resolve(); };
+                  tx.onerror = () => { db.close(); resolve(); };
+                  for (const storeName of Object.keys(stores)) {
+                    try {
+                      const os = tx.objectStore(storeName);
+                      os.clear().onsuccess = () => {
+                        const arr = stores[storeName] || [];
+                        for (const item of arr) {
+                          try { os.put(item); } catch(e){ /* ignore */ }
+                        }
+                      };
+                    } catch(e){ /* ignore */ }
+                  }
+                };
+                rNew.onerror = () => { resolve(); };
+              };
+            });
+          } // end for each dbName
+        } // end indexedDB
+
+        // caches restore
+        if (data.caches && 'caches' in window) {
+          for (const cacheName of Object.keys(data.caches)) {
+            try {
+              const cache = await caches.open(cacheName);
+              // clear existing
+              const existingKeys = await cache.keys();
+              await Promise.all(existingKeys.map(k=>cache.delete(k)));
+              // put entries
+              for (const entry of data.caches[cacheName]) {
+                try {
+                  const content = entry.body || {};
+                  let response;
+                  if (entry.body && entry.body.type === 'json') {
+                    response = new Response(JSON.stringify(entry.body.body), { headers: {'content-type': entry.contentType || 'application/json'}});
+                  } else if (entry.body && entry.body.type === 'text') {
+                    response = new Response(entry.body.body, { headers: {'content-type': entry.contentType || 'text/plain'}});
+                  } else if (entry.body && entry.body.type === 'binary') {
+                    // base64 -> Uint8Array
+                    try {
+                      const b64 = entry.body.body.replace(/\.\.\.$/,''); // strip possible trailing ellipsis
+                      const binStr = atob(b64);
+                      const len = binStr.length;
+                      const bytes = new Uint8Array(len);
+                      for (let i=0;i<len;i++) bytes[i]=binStr.charCodeAt(i);
+                      response = new Response(bytes.buffer, { headers: {'content-type': entry.contentType || 'application/octet-stream'}});
+                    } catch(e){ response = new Response('', { headers: {'content-type': entry.contentType || 'application/octet-stream'}}); }
+                  } else {
+                    // unknown; store placeholder
+                    response = new Response('', { headers: {'content-type': entry.contentType || 'application/octet-stream'}});
+                  }
+                  await cache.put(entry.url, response);
+                } catch(e){ console.warn('cache put failed', e); }
+              }
+            } catch(e){ console.warn('cache restore error', cacheName, e); }
+          }
+        }
+
+        // final: reload so games pick up restored storage/cookies
+        showStatus('Restore complete. Reloading...', 2000);
+        setTimeout(()=> location.reload(), 900);
+      } catch(e){
+        console.error('restore failed', e);
+        showStatus('Restore failed — see console', 6000);
+      }
+    }
+
+    /* -------------------------
+       Wire buttons
+       ------------------------- */
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      // run save - non-blocking
+      saveAllData();
+    });
+
+    document.getElementById('loadFile').addEventListener('change', (ev) => {
+      const f = ev.target.files && ev.target.files[0];
+      if (!f) return;
+      // ask user to confirm (optional)
+      const proceed = confirm('Loading will overwrite current cookies/storage and then reload the page. Continue?');
+      if (!proceed) return;
+      loadAllDataFromFile(f);
+    });
+
+    /* -------------------------
+       Small safety: avoid blocking main UI
+       ------------------------- */
+    window.addEventListener('error', (e)=> {
+      console.error('Uncaught error', e);
+    });
+  </script>
+</body>
+</html>
