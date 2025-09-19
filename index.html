@@ -108,8 +108,7 @@
     }
     .taskbar-left { display:flex; gap:6px; align-items:center; }
     .taskbar-left img, .taskbar-left button {
-      height:24px; width:24px; cursor:pointer;
-      border:none; background:transparent;
+      height:24px; width:24px; cursor:pointer; background:none; border:none; padding:0;
     }
   </style>
 </head>
@@ -187,9 +186,10 @@
       <img src="icons/code.png" alt="Code Editor" onclick="openApp('CodeEditor.html','Code Editor')">
       <img src="icons/paint.png" alt="Paint" onclick="openApp('Paint.html','Paint')">
       <img src="icons/music.png" alt="Music Player" onclick="toggleMusicPlayer()">
-      <button onclick="saveData()" title="Save Data">💾</button>
-      <button onclick="document.getElementById('loadFileInput').click()" title="Load Data">📂</button>
-      <input type="file" id="loadFileInput" style="display:none" accept=".json" onchange="loadData(event)">
+      <button onclick="saveData()" title="Save Game Data">💾</button>
+      <label title="Load Game Data">
+        📂<input type="file" style="display:none" onchange="loadData(event)">
+      </label>
     </div>
     <div id="clock"></div>
   </div>
@@ -201,18 +201,21 @@
     let isDraggingPopup = false, offsetX, offsetY;
     let isFull = false, prev = {};
 
+    // Open desktop games (in /games)
     function openGame(file, title){
-      frame.src = "https://scrblz-rar.github.io/web-os/games/" + file;
+      frame.src = "./games/" + file;
       popupName.textContent = title;
       popup.style.display = "flex";
       popup.style.zIndex = Date.now();
     }
+    // Open apps (root directory)
     function openApp(file, title){
-      frame.src = "https://scrblz-rar.github.io/web-os/" + file;
+      frame.src = "./" + file;
       popupName.textContent = title;
       popup.style.display = "flex";
       popup.style.zIndex = Date.now();
     }
+
     function closeGame(){
       popup.style.display = "none";
       frame.src = "";
@@ -246,16 +249,32 @@
     });
     window.addEventListener('mouseup', ()=> isDraggingPopup=false);
 
-    // Music player toggle
+    // Music player toggle + drag
     const musicPlayer = document.getElementById('musicPlayer');
+    const musicBar = document.getElementById('musicTitleBar');
+    let isDraggingMusic = false, musicOffsetX, musicOffsetY;
+
     function toggleMusicPlayer(){
       musicPlayer.style.display = musicPlayer.style.display === 'flex' ? 'none' : 'flex';
     }
     function closeMusicPlayer(){
       musicPlayer.style.display = 'none';
     }
+    musicBar.addEventListener('mousedown', e => {
+      isDraggingMusic = true;
+      musicOffsetX = e.clientX - musicPlayer.offsetLeft;
+      musicOffsetY = e.clientY - musicPlayer.offsetTop;
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', e => {
+      if(!isDraggingMusic) return;
+      musicPlayer.style.left = (e.clientX - musicOffsetX) + 'px';
+      musicPlayer.style.top = (e.clientY - musicOffsetY) + 'px';
+      musicPlayer.style.position = 'absolute';
+    });
+    window.addEventListener('mouseup', ()=> isDraggingMusic = false);
 
-    // Desktop icon drag + open on double click
+    // Icon drag + double click
     document.querySelectorAll('.icon').forEach(icon=>{
       let dragging=false, dx, dy;
       icon.addEventListener('mousedown', e=>{
@@ -274,46 +293,21 @@
       window.addEventListener('mouseup', ()=> dragging=false);
 
       icon.addEventListener('dblclick', ()=>{
-        openGame(icon.dataset.file, icon.dataset.title);
+        const file = icon.dataset.file;
+        const title = icon.dataset.title;
+        openGame(file, title);
       });
     });
 
-    // Save and Load Data
-    function saveData(){
-      const icons = [];
-      document.querySelectorAll('.icon').forEach(icon=>{
-        icons.push({
-          file: icon.dataset.file,
-          title: icon.dataset.title,
-          top: icon.style.top,
-          left: icon.style.left
-        });
-      });
-      const blob = new Blob([JSON.stringify({icons})], {type: 'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'desktop-data.json';
-      a.click();
-    }
-
-    function loadData(event){
-      const file = event.target.files[0];
-      if(!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e){
-        const data = JSON.parse(e.target.result);
-        if(data.icons){
-          document.querySelectorAll('.icon').forEach(icon=>{
-            const match = data.icons.find(i=>i.file===icon.dataset.file);
-            if(match){
-              icon.style.top = match.top;
-              icon.style.left = match.left;
-            }
-          });
-        }
+    // MP3 upload
+    document.getElementById('mp3Upload').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if(file){
+        const audio = document.getElementById('audioPlayer');
+        audio.src = URL.createObjectURL(file);
+        audio.play();
       }
-      reader.readAsText(file);
-    }
+    });
 
     // Clock
     function updateClock() {
@@ -324,6 +318,58 @@
     }
     setInterval(updateClock,1000);
     updateClock();
-  </script>
-</body>
-</html>
+
+    // Save/Load Game Data
+    function sanitizeData(data, maxItems = 1000, maxLength = 100) {
+      if (!Array.isArray(data)) return data;
+      return data.slice(0, maxItems).map(item => {
+        if (typeof item === "string" && item.length > maxLength) {
+          return item.substring(0, maxLength) + "...";
+        } else if (typeof item === "object") {
+          try { return JSON.parse(JSON.stringify(item)); } catch { return "[Unserializable Object]"; }
+        }
+        return item;
+      });
+    }
+
+    async function saveData() {
+      alert("Saving your game data, please wait...");
+      const result = {};
+      result.cookies = document.cookie;
+      result.localStorage = { ...localStorage };
+      result.sessionStorage = { ...sessionStorage };
+
+      result.indexedDB = {};
+      const dbs = await indexedDB.databases();
+      for (const dbInfo of dbs) {
+        if (!dbInfo.name) continue;
+        result.indexedDB[dbInfo.name] = {};
+        await new Promise((resolve, reject) => {
+          const openRequest = indexedDB.open(dbInfo.name, dbInfo.version);
+          openRequest.onerror = () => reject(openRequest.error);
+          openRequest.onsuccess = () => {
+            const db = openRequest.result;
+            const storeNames = Array.from(db.objectStoreNames);
+            if (storeNames.length === 0) { resolve(); return; }
+            const transaction = db.transaction(storeNames, "readonly");
+            const storePromises = [];
+            for (const storeName of storeNames) {
+              result.indexedDB[dbInfo.name][storeName] = [];
+              const store = transaction.objectStore(storeName);
+              const getAllRequest = store.getAll();
+              const p = new Promise((res, rej) => {
+                getAllRequest.onsuccess = () => {
+                  result.indexedDB[dbInfo.name][storeName] = sanitizeData(getAllRequest.result);
+                  res();
+                };
+                getAllRequest.onerror = () => rej(getAllRequest.error);
+              });
+              storePromises.push(p);
+            }
+            Promise.all(storePromises).then(resolve);
+          };
+        });
+      }
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(new Blob([JSON.stringify(result)], { type: "text
