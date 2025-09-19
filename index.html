@@ -5,31 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>web-os</title>
   <style>
-    :root {
-      --ink: #111;
-      --muted: #3a3a3a;
-      --accent: #0ea5e9;
-      --accent2: #0078D7;
-      --glass: #ffffffcc;
-      --border: #b5b5b5;
-      --bar: #f0f0f0;
+    :root{
+      --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --accent2:#0078D7;
+      --glass:#ffffffcc; --border:#b5b5b5; --bar:#f0f0f0;
     }
-    * {
-      box-sizing: border-box;
-    }
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    body {
-      color: var(--ink);
-      min-height: 100vh;
-      overflow: hidden;
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+    body{
+      color:var(--ink);
+      min-height:100vh; overflow:hidden;
       background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
-      position: relative;
-      user-select: none;
+      position:relative;
+      user-select:none;
     }
 
     /* Desktop Icons */
@@ -40,76 +27,44 @@
       position: absolute;
     }
     .icon img {
-      width: 64px;
-      height: 64px;
-      display: block;
-      margin: 0 auto;
+      width: 64px; height: 64px;
+      display:block; margin:0 auto;
       pointer-events: none;
     }
     .icon span {
-      display: block;
-      margin-top: 4px;
-      font-size: 12px;
-      background: rgba(255, 255, 255, 0.4);
-      border-radius: 4px;
-      padding: 2px 4px;
+      display:block;
+      margin-top:4px;
+      font-size:12px;
+      background:rgba(255,255,255,0.4);
+      border-radius:4px;
+      padding:2px 4px;
       pointer-events: none;
     }
     .icon.selected {
-      background: rgba(128, 128, 128, 0.4);
-      border-radius: 6px;
-      padding: 4px 0;
+      background:rgba(128,128,128,0.4);
+      border-radius:6px;
+      padding:4px 0;
     }
 
     /* Popup Window */
     .popup {
-      position: absolute;
-      top: 100px;
-      left: 100px;
-      width: 800px;
-      height: 500px;
-      background: var(--glass);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, .35);
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
-      z-index: 999;
-      resize: both;
+      position:absolute; top:100px; left:100px;
+      width:800px; height:500px;
+      background:var(--glass); border:1px solid var(--border); border-radius:6px;
+      box-shadow:0 12px 28px rgba(0,0,0,.35);
+      display:none; flex-direction:column; overflow:hidden;
+      z-index:999; resize:both;
     }
-    .popup .titlebar {
-      background: var(--bar);
-      padding: 6px 10px;
-      display: flex;
-      align-items: center;
-      cursor: move;
-      border-bottom: 1px solid var(--border);
+    .popup .titlebar{
+      background:var(--bar); padding:6px 10px; display:flex; align-items:center;
+      cursor:move; border-bottom:1px solid var(--border);
     }
-    .popup iframe {
-      flex: 1;
-      border: 0;
-      background: #000;
-    }
+    .popup iframe{ flex:1; border:0; background:#000; }
 
-    .winbtns {
-      margin-left: auto;
-      display: flex;
-    }
-    .winbtn {
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-      padding: 0 10px;
-    }
-    .winbtn:hover {
-      background: var(--accent);
-      color: #fff;
-    }
-    .winbtn.close:hover {
-      background: #e81123;
-      color: #fff;
-    }
+    .winbtns{ margin-left:auto; display:flex; }
+    .winbtn { border:0; background:transparent; cursor:pointer; padding:0 10px; }
+    .winbtn:hover { background:var(--accent); color:#fff }
+    .winbtn.close:hover { background:#e81123; color:#fff }
 
     /* Music Player */
     #musicPlayer {
@@ -145,29 +100,16 @@
 
     /* Taskbar */
     .taskbar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 32px;
-      background: var(--bar);
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 10px;
-      font-size: 13px;
-      z-index: 1000;
+      position:fixed; bottom:0; left:0; right:0;
+      height:32px; background:var(--bar);
+      border-top:1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center;
+      padding:0 10px; font-size:13px; z-index:1000;
     }
-    .taskbar-left {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-    .taskbar-left img {
-      height: 24px;
-      width: 24px;
-      cursor: pointer;
+    .taskbar-left { display:flex; gap:6px; align-items:center; }
+    .taskbar-left img, .taskbar-left button {
+      height:24px; width:24px; cursor:pointer;
+      border:none; background:transparent;
     }
   </style>
 </head>
@@ -215,19 +157,6 @@
     <span>Cuphead</span>
   </div>
 
-  <!-- Save / Load Data Icons -->
-  <div class="icon" style="top:460px; left:150px;" onclick="saveData()">
-    <img src="icons/save.png" alt="Save Data">
-    <span>Save Data</span>
-  </div>
-  <div class="icon" style="top:560px; left:150px;">
-    <label style="cursor:pointer;">
-      <img src="icons/load.png" alt="Load Data">
-      <span>Load Data</span>
-      <input type="file" onchange="loadData(event)" style="display:none;">
-    </label>
-  </div>
-
   <!-- Popup Window -->
   <div id="popup" class="popup">
     <div class="titlebar" id="popupTitle">
@@ -258,6 +187,9 @@
       <img src="icons/code.png" alt="Code Editor" onclick="openApp('CodeEditor.html','Code Editor')">
       <img src="icons/paint.png" alt="Paint" onclick="openApp('Paint.html','Paint')">
       <img src="icons/music.png" alt="Music Player" onclick="toggleMusicPlayer()">
+      <button onclick="saveData()" title="Save Data">💾</button>
+      <button onclick="document.getElementById('loadFileInput').click()" title="Load Data">📂</button>
+      <input type="file" id="loadFileInput" style="display:none" accept=".json" onchange="loadData(event)">
     </div>
     <div id="clock"></div>
   </div>
@@ -298,7 +230,7 @@
       }
     }
 
-    // Popup Dragging
+    // Dragging popup
     const bar = document.getElementById('popupTitle');
     bar.addEventListener('mousedown', e=>{
       if(isFull) return;
@@ -314,30 +246,74 @@
     });
     window.addEventListener('mouseup', ()=> isDraggingPopup=false);
 
-    // Music Player Dragging
+    // Music player toggle
     const musicPlayer = document.getElementById('musicPlayer');
-    const musicBar = document.getElementById('musicTitleBar');
-    let isDraggingMusic = false, musicOffsetX, musicOffsetY;
-
     function toggleMusicPlayer(){
       musicPlayer.style.display = musicPlayer.style.display === 'flex' ? 'none' : 'flex';
     }
     function closeMusicPlayer(){
       musicPlayer.style.display = 'none';
     }
-    musicBar.addEventListener('mousedown', e => {
-      isDraggingMusic = true;
-      musicOffsetX = e.clientX - musicPlayer.offsetLeft;
-      musicOffsetY = e.clientY - musicPlayer.offsetTop;
-      e.preventDefault();
+
+    // Desktop icon drag + open on double click
+    document.querySelectorAll('.icon').forEach(icon=>{
+      let dragging=false, dx, dy;
+      icon.addEventListener('mousedown', e=>{
+        document.querySelectorAll('.icon').forEach(i=>i.classList.remove('selected'));
+        icon.classList.add('selected');
+        dragging=true;
+        dx = e.clientX - icon.offsetLeft;
+        dy = e.clientY - icon.offsetTop;
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', e=>{
+        if(!dragging) return;
+        icon.style.left = (e.clientX - dx)+"px";
+        icon.style.top = (e.clientY - dy)+"px";
+      });
+      window.addEventListener('mouseup', ()=> dragging=false);
+
+      icon.addEventListener('dblclick', ()=>{
+        openGame(icon.dataset.file, icon.dataset.title);
+      });
     });
-    window.addEventListener('mousemove', e => {
-      if(!isDraggingMusic) return;
-      musicPlayer.style.left = (e.clientX - musicOffsetX) + 'px';
-      musicPlayer.style.top = (e.clientY - musicOffsetY) + 'px';
-      musicPlayer.style.position = 'absolute';
-    });
-    window.addEventListener('mouseup', ()=> isDraggingMusic = false);
+
+    // Save and Load Data
+    function saveData(){
+      const icons = [];
+      document.querySelectorAll('.icon').forEach(icon=>{
+        icons.push({
+          file: icon.dataset.file,
+          title: icon.dataset.title,
+          top: icon.style.top,
+          left: icon.style.left
+        });
+      });
+      const blob = new Blob([JSON.stringify({icons})], {type: 'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'desktop-data.json';
+      a.click();
+    }
+
+    function loadData(event){
+      const file = event.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e){
+        const data = JSON.parse(e.target.result);
+        if(data.icons){
+          document.querySelectorAll('.icon').forEach(icon=>{
+            const match = data.icons.find(i=>i.file===icon.dataset.file);
+            if(match){
+              icon.style.top = match.top;
+              icon.style.left = match.left;
+            }
+          });
+        }
+      }
+      reader.readAsText(file);
+    }
 
     // Clock
     function updateClock() {
@@ -348,132 +324,6 @@
     }
     setInterval(updateClock,1000);
     updateClock();
-
-    // Sanitize data
-    function sanitizeData(data, maxItems = 1000, maxLength = 100) {
-      if (!Array.isArray(data)) return data;
-      return data.slice(0, maxItems).map(item => {
-        if (typeof item === "string" && item.length > maxLength) {
-          return item.substring(0, maxLength) + "...";
-        } else if (typeof item === "object") {
-          try {
-            return JSON.parse(JSON.stringify(item));
-          } catch {
-            return "[Unserializable Object]";
-          }
-        }
-        return item;
-      });
-    }
-
-    // Save browser data
-    async function saveData() {
-      alert("This might take a while, don't touch anything other than this OK button");
-
-      const result = {
-        cookies: document.cookie,
-        localStorage: {...localStorage},
-        sessionStorage: {...sessionStorage},
-        indexedDB: {},
-        caches: {}
-      };
-
-      const dbs = await indexedDB.databases();
-      for (const dbInfo of dbs) {
-        if (!dbInfo.name) continue;
-        result.indexedDB[dbInfo.name] = {};
-        await new Promise((resolve, reject) => {
-          const openRequest = indexedDB.open(dbInfo.name, dbInfo.version);
-          openRequest.onerror = () => reject(openRequest.error);
-          openRequest.onsuccess = () => {
-            const db = openRequest.result;
-            const storeNames = Array.from(db.objectStoreNames);
-            if (storeNames.length === 0) {
-              resolve();
-              return;
-            }
-            const transaction = db.transaction(storeNames, "readonly");
-            const storePromises = [];
-            for (const storeName of storeNames) {
-              result.indexedDB[dbInfo.name][storeName] = [];
-              const store = transaction.objectStore(storeName);
-              const getAllRequest = store.getAll();
-              const p = new Promise((res, rej) => {
-                getAllRequest.onsuccess = () => {
-                  result.indexedDB[dbInfo.name][storeName] = sanitizeData(getAllRequest.result);
-                  res();
-                };
-                getAllRequest.onerror = () => rej(getAllRequest.error);
-              });
-              storePromises.push(p);
-            }
-            Promise.all(storePromises).then(() => resolve());
-          };
-        });
-      }
-
-      const cacheNames = await caches.keys();
-      for (const cacheName of cacheNames) {
-        const cache = await caches.open(cacheName);
-        const requests = await cache.keys();
-        result.caches[cacheName] = [];
-        for (const req of requests) {
-          const response = await cache.match(req);
-          if (!response) continue;
-          const cloned = response.clone();
-          const contentType = cloned.headers.get('content-type') || '';
-          let body;
-          try {
-            if (contentType.includes('application/json')) {
-              body = await cloned.json();
-            } else if (contentType.includes('text') || contentType.includes('javascript')) {
-              body = await cloned.text();
-            } else {
-              const buffer = await cloned.arrayBuffer();
-              body = btoa(String.fromCharCode(...new Uint8Array(buffer)));
-            }
-          } catch (e) {
-            body = '[Unserializable Content]';
-          }
-          result.caches[cacheName].push({url: req.url, contentType, body});
-        }
-      }
-
-      const blob = new Blob([JSON.stringify(result)], {type: 'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `backup-${Date.now()}.data`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    // Load browser data
-    function loadData(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const data = JSON.parse(e.target.result);
-
-        // Restore cookies
-        document.cookie = data.cookies;
-
-        // Restore localStorage
-        for (const key in data.localStorage) {
-          localStorage.setItem(key, data.localStorage[key]);
-        }
-
-        // Restore sessionStorage
-        for (const key in data.sessionStorage) {
-          sessionStorage.setItem(key, data.sessionStorage[key]);
-        }
-
-        alert('Data restored! Reload the page to see all changes.');
-      };
-      reader.readAsText(file);
-    }
   </script>
 </body>
 </html>
