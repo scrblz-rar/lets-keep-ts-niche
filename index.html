@@ -5,18 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>web-os</title>
   <style>
-    :root{
-      --ink:#111; --muted:#3a3a3a; --accent:#0ea5e9; --accent2:#0078D7;
-      --glass:#ffffffcc; --border:#b5b5b5; --bar:#f0f0f0;
+    :root {
+      --ink: #111;
+      --muted: #3a3a3a;
+      --accent: #0ea5e9;
+      --accent2: #0078D7;
+      --glass: #ffffffcc;
+      --border: #b5b5b5;
+      --bar: #f0f0f0;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
-    body{
-      color:var(--ink);
-      min-height:100vh; overflow:hidden;
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      color: var(--ink);
+      min-height: 100vh;
+      overflow: hidden;
       background: repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50%/40px 40px;
-      position:relative;
-      user-select:none;
+      position: relative;
+      user-select: none;
     }
 
     /* Desktop Icons */
@@ -27,44 +40,76 @@
       position: absolute;
     }
     .icon img {
-      width: 64px; height: 64px;
-      display:block; margin:0 auto;
+      width: 64px;
+      height: 64px;
+      display: block;
+      margin: 0 auto;
       pointer-events: none;
     }
     .icon span {
-      display:block;
-      margin-top:4px;
-      font-size:12px;
-      background:rgba(255,255,255,0.4);
-      border-radius:4px;
-      padding:2px 4px;
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 4px;
+      padding: 2px 4px;
       pointer-events: none;
     }
     .icon.selected {
-      background:rgba(128,128,128,0.4);
-      border-radius:6px;
-      padding:4px 0;
+      background: rgba(128, 128, 128, 0.4);
+      border-radius: 6px;
+      padding: 4px 0;
     }
 
     /* Popup Window */
     .popup {
-      position:absolute; top:100px; left:100px;
-      width:800px; height:500px;
-      background:var(--glass); border:1px solid var(--border); border-radius:6px;
-      box-shadow:0 12px 28px rgba(0,0,0,.35);
-      display:none; flex-direction:column; overflow:hidden;
-      z-index:999; resize:both;
+      position: absolute;
+      top: 100px;
+      left: 100px;
+      width: 800px;
+      height: 500px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, .35);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 999;
+      resize: both;
     }
-    .popup .titlebar{
-      background:var(--bar); padding:6px 10px; display:flex; align-items:center;
-      cursor:move; border-bottom:1px solid var(--border);
+    .popup .titlebar {
+      background: var(--bar);
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      cursor: move;
+      border-bottom: 1px solid var(--border);
     }
-    .popup iframe{ flex:1; border:0; background:#000; }
+    .popup iframe {
+      flex: 1;
+      border: 0;
+      background: #000;
+    }
 
-    .winbtns{ margin-left:auto; display:flex; }
-    .winbtn { border:0; background:transparent; cursor:pointer; padding:0 10px; }
-    .winbtn:hover { background:var(--accent); color:#fff }
-    .winbtn.close:hover { background:#e81123; color:#fff }
+    .winbtns {
+      margin-left: auto;
+      display: flex;
+    }
+    .winbtn {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      padding: 0 10px;
+    }
+    .winbtn:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+    .winbtn.close:hover {
+      background: #e81123;
+      color: #fff;
+    }
 
     /* Music Player */
     #musicPlayer {
@@ -100,35 +145,30 @@
 
     /* Taskbar */
     .taskbar {
-      position:fixed; bottom:0; left:0; right:0;
-      height:32px; background:var(--bar);
-      border-top:1px solid var(--border);
-      display:flex; justify-content:space-between; align-items:center;
-      padding:0 10px; font-size:13px; z-index:1000;
-    }
-    .taskbar-left { display:flex; gap:6px; align-items:center; }
-    .taskbar-left img {
-      height:24px; width:24px; cursor:pointer;
-    }
-
-    /* Backup Buttons (styled to match taskbar UI) */
-    .backup-btn {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 32px;
       background: var(--bar);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 2px 6px;
-      cursor: pointer;
-      font-size: 12px;
-      margin-left: 6px;
-      display: inline-flex;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
       align-items: center;
+      padding: 0 10px;
+      font-size: 13px;
+      z-index: 1000;
+    }
+    .taskbar-left {
+      display: flex;
       gap: 6px;
+      align-items: center;
     }
-    .backup-btn:hover {
-      background: var(--accent);
-      color: white;
+    .taskbar-left img {
+      height: 24px;
+      width: 24px;
+      cursor: pointer;
     }
-    .backup-btn input[type="file"] { display: none; }
   </style>
 </head>
 <body>
@@ -158,7 +198,7 @@
     <img src="icons/drift.png" alt="Drift Hunters">
     <span>Drift Hunters</span>
   </div>
-   <div class="icon" style="top:160px; left:150px;" data-file="Sort the Court.html" data-title="Sort The Court">
+  <div class="icon" style="top:160px; left:150px;" data-file="Sort the Court.html" data-title="Sort The Court">
     <img src="icons/sort-the-court.png" alt="Sort The Court">
     <span>Sort the Court</span>
   </div>
@@ -175,7 +215,18 @@
     <span>Cuphead</span>
   </div>
 
-
+  <!-- Save / Load Data Icons -->
+  <div class="icon" style="top:460px; left:150px;" onclick="saveData()">
+    <img src="icons/save.png" alt="Save Data">
+    <span>Save Data</span>
+  </div>
+  <div class="icon" style="top:560px; left:150px;">
+    <label style="cursor:pointer;">
+      <img src="icons/load.png" alt="Load Data">
+      <span>Load Data</span>
+      <input type="file" onchange="loadData(event)" style="display:none;">
+    </label>
+  </div>
 
   <!-- Popup Window -->
   <div id="popup" class="popup">
@@ -207,12 +258,6 @@
       <img src="icons/code.png" alt="Code Editor" onclick="openApp('CodeEditor.html','Code Editor')">
       <img src="icons/paint.png" alt="Paint" onclick="openApp('Paint.html','Paint')">
       <img src="icons/music.png" alt="Music Player" onclick="toggleMusicPlayer()">
-      <!-- Added Backup Buttons (styled to match) -->
-      <button class="backup-btn" onclick="saveData()">💾 Save Data</button>
-      <label class="backup-btn">
-        📂 Load Data
-        <input type="file" onchange="loadData(event)">
-      </label>
     </div>
     <div id="clock"></div>
   </div>
@@ -224,21 +269,18 @@
     let isDraggingPopup = false, offsetX, offsetY;
     let isFull = false, prev = {};
 
-    // Open desktop games (in /games)
     function openGame(file, title){
       frame.src = "https://scrblz-rar.github.io/web-os/games/" + file;
       popupName.textContent = title;
       popup.style.display = "flex";
       popup.style.zIndex = Date.now();
     }
-    // Open apps (root directory)
     function openApp(file, title){
       frame.src = "https://scrblz-rar.github.io/web-os/" + file;
       popupName.textContent = title;
       popup.style.display = "flex";
       popup.style.zIndex = Date.now();
     }
-
     function closeGame(){
       popup.style.display = "none";
       frame.src = "";
@@ -256,7 +298,7 @@
       }
     }
 
-    // Dragging popup
+    // Popup Dragging
     const bar = document.getElementById('popupTitle');
     bar.addEventListener('mousedown', e=>{
       if(isFull) return;
@@ -272,7 +314,7 @@
     });
     window.addEventListener('mouseup', ()=> isDraggingPopup=false);
 
-    // Music player toggle + drag
+    // Music Player Dragging
     const musicPlayer = document.getElementById('musicPlayer');
     const musicBar = document.getElementById('musicTitleBar');
     let isDraggingMusic = false, musicOffsetX, musicOffsetY;
@@ -286,51 +328,16 @@
     musicBar.addEventListener('mousedown', e => {
       isDraggingMusic = true;
       musicOffsetX = e.clientX - musicPlayer.offsetLeft;
-      musicOffsetY = e.clientY - musicPlayer.offsetRight;
+      musicOffsetY = e.clientY - musicPlayer.offsetTop;
       e.preventDefault();
     });
     window.addEventListener('mousemove', e => {
       if(!isDraggingMusic) return;
       musicPlayer.style.left = (e.clientX - musicOffsetX) + 'px';
-      musicPlayer.style.right = (e.clientY - musicOffsetY) + 'px';
+      musicPlayer.style.top = (e.clientY - musicOffsetY) + 'px';
       musicPlayer.style.position = 'absolute';
     });
     window.addEventListener('mouseup', ()=> isDraggingMusic = false);
-
-    // Icon drag + double click
-    document.querySelectorAll('.icon').forEach(icon=>{
-      let dragging=false, dx, dy;
-      icon.addEventListener('mousedown', e=>{
-        document.querySelectorAll('.icon').forEach(i=>i.classList.remove('selected'));
-        icon.classList.add('selected');
-        dragging=true;
-        dx = e.clientX - icon.offsetLeft;
-        dy = e.clientY - icon.offsetTop;
-        e.preventDefault();
-      });
-      window.addEventListener('mousemove', e=>{
-        if(!dragging) return;
-        icon.style.left = (e.clientX - dx)+"px";
-        icon.style.top = (e.clientY - dy)+"px";
-      });
-      window.addEventListener('mouseup', ()=> dragging=false);
-
-      icon.addEventListener('dblclick', ()=>{
-        const file = icon.dataset.file;
-        const title = icon.dataset.title;
-        openGame(file, title);
-      });
-    });
-
-    // MP3 upload
-    document.getElementById('mp3Upload').addEventListener('change', e => {
-      const file = e.target.files[0];
-      if(file){
-        const audio = document.getElementById('audioPlayer');
-        audio.src = URL.createObjectURL(file);
-        audio.play();
-      }
-    });
 
     // Clock
     function updateClock() {
@@ -342,14 +349,35 @@
     setInterval(updateClock,1000);
     updateClock();
 
-    // Save & Load Functions (as provided)
+    // Sanitize data
+    function sanitizeData(data, maxItems = 1000, maxLength = 100) {
+      if (!Array.isArray(data)) return data;
+      return data.slice(0, maxItems).map(item => {
+        if (typeof item === "string" && item.length > maxLength) {
+          return item.substring(0, maxLength) + "...";
+        } else if (typeof item === "object") {
+          try {
+            return JSON.parse(JSON.stringify(item));
+          } catch {
+            return "[Unserializable Object]";
+          }
+        }
+        return item;
+      });
+    }
+
+    // Save browser data
     async function saveData() {
-      alert("This might take a while, dont touch anything other than this OK button");
-      const result = {};
-      result.cookies = document.cookie;
-      result.localStorage = {...localStorage};
-      result.sessionStorage = {...sessionStorage};
-      result.indexedDB = {};
+      alert("This might take a while, don't touch anything other than this OK button");
+
+      const result = {
+        cookies: document.cookie,
+        localStorage: {...localStorage},
+        sessionStorage: {...sessionStorage},
+        indexedDB: {},
+        caches: {}
+      };
+
       const dbs = await indexedDB.databases();
       for (const dbInfo of dbs) {
         if (!dbInfo.name) continue;
@@ -372,7 +400,7 @@
               const getAllRequest = store.getAll();
               const p = new Promise((res, rej) => {
                 getAllRequest.onsuccess = () => {
-                  result.indexedDB[dbInfo.name][storeName] = sanitizeData(getAllRequest.result, 1000, 100);
+                  result.indexedDB[dbInfo.name][storeName] = sanitizeData(getAllRequest.result);
                   res();
                 };
                 getAllRequest.onerror = () => rej(getAllRequest.error);
@@ -384,7 +412,6 @@
         });
       }
 
-      result.caches = {};
       const cacheNames = await caches.keys();
       for (const cacheName of cacheNames) {
         const cache = await caches.open(cacheName);
@@ -406,115 +433,45 @@
               body = btoa(String.fromCharCode(...new Uint8Array(buffer)));
             }
           } catch (e) {
-            body = '[Unable to read body]';
+            body = '[Unserializable Content]';
           }
-          result.caches[cacheName].push({
-            url: req.url,
-            body,
-            contentType
-          });
+          result.caches[cacheName].push({url: req.url, contentType, body});
         }
       }
-    
-      alert("Done, wait for the download to come");
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(new Blob([JSON.stringify(result)], {
-          type: "text/plain"
-      }));
-      link.download = `${Date.now()}.data`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+
+      const blob = new Blob([JSON.stringify(result)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backup-${Date.now()}.data`;
+      a.click();
+      URL.revokeObjectURL(url);
     }
-    
-    async function loadData(event) {
+
+    // Load browser data
+    function loadData(event) {
       const file = event.target.files[0];
       if (!file) return;
+
       const reader = new FileReader();
-      reader.onload = async function (e) {
-          const data = JSON.parse(e.target.result);
-          if (data.cookies) {
-              data.cookies.split(';').forEach(cookie => {
-                document.cookie = cookie.trim();
-              });
-            }
-          
-            if (data.localStorage) {
-              for (const key in data.localStorage) {
-                localStorage.setItem(key, data.localStorage[key]);
-              }
-            }
-          
-            if (data.sessionStorage) {
-              for (const key in data.sessionStorage) {
-                sessionStorage.setItem(key, data.sessionStorage[key]);
-              }
-            }
-          
-            if (data.indexedDB) {
-              for (const dbName in data.indexedDB) {
-                const stores = data.indexedDB[dbName];
-                await new Promise((resolve, reject) => {
-                  const request = indexedDB.open(dbName, 1);
-                  request.onupgradeneeded = e => {
-                    const db = e.target.result;
-                    for (const storeName in stores) {
-                      if (!db.objectStoreNames.contains(storeName)) {
-                        db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
-                      }
-                    }
-                  };
-                  request.onsuccess = e => {
-                    const db = e.target.result;
-                    const transaction = db.transaction(Object.keys(stores), 'readwrite');
-                    transaction.onerror = () => reject(transaction.error);
-                    let pendingStores = Object.keys(stores).length;
-          
-                    for (const storeName in stores) {
-                      const objectStore = transaction.objectStore(storeName);
-                      objectStore.clear().onsuccess = () => {
-                        for (const item of stores[storeName]) {
-                          objectStore.put(item);
-                        }
-                        pendingStores--;
-                        if (pendingStores === 0) resolve();
-                      };
-                    }
-                  };
-                  request.onerror = () => reject(request.error);
-                });
-              }
-            }
-          
-            if (data.caches) {
-              for (const cacheName in data.caches) {
-                const cache = await caches.open(cacheName);
-                await cache.keys().then(keys => Promise.all(keys.map(k => cache.delete(k)))); // clear existing
-          
-                for (const entry of data.caches[cacheName]) {
-                  let responseBody;
-                  if (entry.contentType.includes('application/json')) {
-                    responseBody = JSON.stringify(entry.body);
-                  } else if (entry.contentType.includes('text') || entry.contentType.includes('javascript')) {
-                    responseBody = entry.body;
-                  } else {
-                    const binaryStr = atob(entry.body);
-                    const len = binaryStr.length;
-                    const bytes = new Uint8Array(len);
-                    for (let i = 0; i < len; i++) {
-                      bytes[i] = binaryStr.charCodeAt(i);
-                    }
-                    responseBody = bytes.buffer;
-                  }
-                  const headers = new Headers({ 'content-type': entry.contentType });
-                  const response = new Response(responseBody, { headers });
-                  await cache.put(entry.url, response);
-                }
-              }
-            }
-          alert("Data loaded");
+      reader.onload = async (e) => {
+        const data = JSON.parse(e.target.result);
+
+        // Restore cookies
+        document.cookie = data.cookies;
+
+        // Restore localStorage
+        for (const key in data.localStorage) {
+          localStorage.setItem(key, data.localStorage[key]);
+        }
+
+        // Restore sessionStorage
+        for (const key in data.sessionStorage) {
+          sessionStorage.setItem(key, data.sessionStorage[key]);
+        }
+
+        alert('Data restored! Reload the page to see all changes.');
       };
-      alert("This might take a while, dont touch anything other than this OK button");
       reader.readAsText(file);
     }
   </script>
