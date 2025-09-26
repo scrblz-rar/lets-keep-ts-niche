@@ -1,40 +1,5 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>off.zchr.org — Embedded</title>
-  <style>
-    html,body { height:100%; margin:0; font-family: system-ui,Segoe UI,Roboto,Arial; background:#111; color:#eee; }
-    .topbar {
-      height:56px;
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:0 12px;
-      background:linear-gradient(180deg,#0f1724,#071226);
-      box-shadow:0 2px 8px rgba(0,0,0,0.5);
-    }
-    .title { font-weight:600; font-size:16px; }
-    .actions { margin-left:auto; display:flex; gap:8px; }
-    .btn {
-      background:#0b61ff;padding:8px 10px;border-radius:6px;color:white;text-decoration:none;font-weight:600;
-      display:inline-block;
-    }
-    .hint { padding:12px; text-align:center; font-size:14px; background:#081221; color:#99a; }
-    iframe {
-      width:100%;
-      height: calc(100% - 56px);
-      border:0;
-      display:block;
-    }
-    .fallback {
-      padding:24px;
-      text-align:center;
-    }
-    a.plain { color:#9bd; }
-  </style>
-</head>
 <body>
   <div class="topbar">
     <div class="title">off.zchr.org — Embedded</div>
@@ -43,18 +8,6 @@
     </div>
   </div>
 
-  <div class="hint">
-    If the site doesn't display below, it may be blocked by your network or the site prevents embedding.
-    Use the "Open original" button to open in a new tab (or view at home).
-  </div>
 
   <!-- Embedded site -->
   <iframe src="https://off.zchr.org/" title="off.zchr.org (embedded)"></iframe>
-
-  <noscript>
-    <div class="fallback">
-      JavaScript is disabled. <a class="plain" href="https://off.zchr.org/" target="_blank" rel="noopener">Open the site directly</a>.
-    </div>
-  </noscript>
-</body>
-</html>
