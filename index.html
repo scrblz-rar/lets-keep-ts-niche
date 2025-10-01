@@ -248,7 +248,12 @@
         <input id="loadFile" type="file" accept=".webosdata,.json">
       </label>
     </div>
-    <div id="clock"></div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div id="visitorCounter" title="Visitor count" style="font-size:13px; padding:4px 8px; background:var(--bar); border:1px solid var(--border); border-radius:6px;">
+        👥 <span id="visitorCount">...</span>
+      </div>
+      <div id="clock"></div>
+    </div>
   </div>
 
   <script>
@@ -828,6 +833,47 @@
       if (!proceed) return;
       loadAllDataFromFile(f);
     });
+
+    /* -------------------------
+       Visitor counter (bottom bar)
+       - attempts to use countapi.xyz to maintain a global shared counter
+       - falls back to per-browser localStorage count if network/API fails
+       ------------------------- */
+    (function(){
+      const el = document.getElementById('visitorCount');
+      if(!el) return;
+      // friendly namespace based on hostname to reduce collisions across different hosts
+      const ns = 'webos_' + (location.hostname || 'local').replace(/[^a-z0-9_-]/gi,'_').slice(0,60);
+      const key = 'visits';
+
+      async function incrGlobal() {
+        try {
+          const resp = await fetch('https://api.countapi.xyz/hit/' + encodeURIComponent(ns) + '/' + encodeURIComponent(key));
+          if (!resp.ok) throw new Error('countapi responded ' + resp.status);
+          const data = await resp.json();
+          if (data && typeof data.value !== 'undefined') {
+            el.textContent = data.value;
+            return;
+          }
+        } catch (e) {
+          console.warn('CountAPI unavailable, falling back to local counter', e);
+        }
+        // fallback:
+        try {
+          const localKey = 'webos_local_visits_' + (location.hostname || 'local');
+          let v = parseInt(localStorage.getItem(localKey) || '0', 10);
+          v = isNaN(v) ? 1 : v + 1;
+          localStorage.setItem(localKey, v);
+          el.textContent = v;
+        } catch (ee) {
+          // final fallback: show a dash
+          el.textContent = '-';
+        }
+      }
+
+      // run increment/display (do not block UI)
+      incrGlobal();
+    })();
 
     /* -------------------------
        Small safety: avoid blocking main UI
